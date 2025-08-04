@@ -19,13 +19,13 @@ type Database struct {
 func NewDatabase(cfg *config.Config) (*Database, error) {
 	pg, err := newPostgreSQLConnection(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to PostgreSQL: %w", err)
+		return nil, fmt.Errorf("Failed to connect to PostgreSQL: %w", err)
 	}
 
 	rdb, err := newRedisConnection(cfg)
 	if err != nil {
 		pg.Close()
-		return nil, fmt.Errorf("failed to connect to Redis: %w", err)
+		return nil, fmt.Errorf("Failed to connect to Redis: %w", err)
 	}
 
 	return &Database{
@@ -41,7 +41,7 @@ func newPostgreSQLConnection(cfg *config.Config) (*pgxpool.Pool, error) {
 
 	poolConfig, err := pgxpool.ParseConfig(cfg.DatabaseURL())
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse database URL: %w", err)
+		return nil, fmt.Errorf("Failed to parse database URL: %w", err)
 	}
 
 	poolConfig.MaxConns = int32(cfg.DatabasePool.MaxConns)
@@ -52,12 +52,12 @@ func newPostgreSQLConnection(cfg *config.Config) (*pgxpool.Pool, error) {
 
 	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create connection pool: %w", err)
+		return nil, fmt.Errorf("Failed to create connection pool: %w", err)
 	}
 
 	if err := pool.Ping(ctx); err != nil {
 		pool.Close()
-		return nil, fmt.Errorf("failed to ping database: %w", err)
+		return nil, fmt.Errorf("Failed to ping database: %w", err)
 	}
 
 	return pool, nil
@@ -82,7 +82,7 @@ func newRedisConnection(cfg *config.Config) (*redis.Client, error) {
 
 	if err := rdb.Ping(ctx).Err(); err != nil {
 		rdb.Close()
-		return nil, fmt.Errorf("failed to ping Redis: %w", err)
+		return nil, fmt.Errorf("Failed to ping Redis: %w", err)
 	}
 
 	return rdb, nil
@@ -97,4 +97,17 @@ func (db *Database) Close() {
 	if db.Redis != nil {
 		db.Redis.Close()
 	}
+}
+
+// Health checks the health of all database connections
+func (db *Database) Health(ctx context.Context) error {
+	if err := db.PG.Ping(ctx); err != nil {
+		return fmt.Errorf("PostgreSQL health check failed: %w", err)
+	}
+
+	if err := db.Redis.Ping(ctx).Err(); err != nil {
+		return fmt.Errorf("Redis health check failed: %w", err)
+	}
+
+	return nil
 }
