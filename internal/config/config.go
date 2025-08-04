@@ -1,10 +1,13 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -59,6 +62,102 @@ type CORSConfig struct {
 	ExposeHeaders    []string
 	AllowCredentials bool
 	MaxAge           int
+}
+
+// loads configuration from environment variables
+func Load() (*Config, error) {
+	_ = godotenv.Load()
+
+	config := &Config{
+		Database: DatabaseConfig{
+			Host:     getEnv("DB_HOST", "localhost"),
+			Port:     getEnvInt("DB_PORT", 5432),
+			User:     getEnv("DB_USER", "postgres"),
+			Password: getEnv("DB_PASSWORD", ""),
+			Name:     getEnv("DB_NAME", "db"),
+			SSLMode:  getEnv("DB_SSL_MODE", "disable"),
+		},
+		Redis: RedisConfig{
+			Host:     getEnv("REDIS_HOST", "localhost"),
+			Port:     getEnvInt("REDIS_PORT", 6379),
+			Password: getEnv("REDIS_PASSWORD", ""),
+			DB:       getEnvInt("REDIS_DB", 0),
+		},
+		Server: ServerConfig{
+			Host: getEnv("SERVER_HOST", "localhost"),
+			Port: getEnvInt("SERVER_PORT", 8080),
+		},
+		NewsAPI: NewsAPIConfig{
+			APIKey:  getEnv("NEWS_API_KEY", ""),
+			BaseURL: getEnv("NEWS_API_BASE_URL", "https://newsapi.org/v2"),
+		},
+		App: AppConfig{
+			Environment: getEnv("APP_ENV", "development"),
+			LogLevel:    getEnv("LOG_LEVEL", "info"),
+		},
+		Cache: CacheConfig{
+			TTL: time.Duration(getEnvInt("CACHE_TTL", 3600)) * time.Second,
+		},
+		CORS: CORSConfig{
+			AllowOrigins: getEnvStringSlice("CORS_ALLOW_ORIGINS", []string{"*"}),
+			AllowMethods: getEnvStringSlice("CORS_ALLOW_METHODS", []string{
+				"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS",
+			}),
+			AllowHeaders: getEnvStringSlice("CORS_ALLOW_HEADERS", []string{
+				"Origin", "Content-Type", "Accept",
+			}),
+			ExposeHeaders:    getEnvStringSlice("CORS_EXPOSE_HEADERS", []string{}),
+			AllowCredentials: getEnvBool("CORS_ALLOW_CREDENTIALS", false),
+			MaxAge:           getEnvInt("CORS_MAX_AGE", 86400),
+		},
+	}
+
+	if err := config.validate(); err != nil {
+		return nil, fmt.Errorf("config validation failed: %w", err)
+	}
+
+	return config, nil
+}
+
+// validate checks if required configuration values are present
+func (c *Config) validate() error {
+	if c.Database.Password == "" {
+		return fmt.Errorf("database password is required")
+	}
+
+	if c.NewsAPI.APIKey == "" {
+		return fmt.Errorf("news API key is required")
+	}
+
+	return nil
+}
+
+func (c *Config) DatabaseURL() string {
+	return fmt.Sprintf(
+		"postgres://%s:%s@%s:%d/%s?sslmode=%s",
+		c.Database.User,
+		c.Database.Password,
+		c.Database.Host,
+		c.Database.Port,
+		c.Database.Name,
+		c.Database.SSLMode,
+	)
+}
+
+func (c *Config) RedisAddr() string {
+	return fmt.Sprintf("%s:%d", c.Redis.Host, c.Redis.Port)
+}
+
+func (c *Config) ServerAddr() string {
+	return fmt.Sprintf("%s:%d", c.Server.Host, c.Server.Port)
+}
+
+func (c *Config) IsDevelopment() bool {
+	return c.App.Environment == "development"
+}
+
+func (c *Config) IsProduction() bool {
+	return c.App.Environment == "production"
 }
 
 func getEnv(key, fallback string) string {
