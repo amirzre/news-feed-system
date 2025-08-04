@@ -86,6 +86,13 @@ func Load() (*Config, error) {
 			Name:     getEnv("DB_NAME", "db"),
 			SSLMode:  getEnv("DB_SSL_MODE", "disable"),
 		},
+		DatabasePool: DatabasePoolConfig{
+			MaxConns:          getEnvInt("DB_MAX_CONNS", 25),
+			MinConns:          getEnvInt("DB_MIN_CONNS", 5),
+			MaxConnLifetime:   getEnvDuration("DB_MAX_CONN_LIFETIME", time.Hour),
+			MaxConnIdleTime:   getEnvDuration("DB_MAX_CONN_IDLE_TIME", 30*time.Minute),
+			HealthCheckPeriod: getEnvDuration("DB_HEALTH_CHECK_PERIOD", time.Minute),
+		},
 		Redis: RedisConfig{
 			Host:     getEnv("REDIS_HOST", "localhost"),
 			Port:     getEnvInt("REDIS_PORT", 6379),
