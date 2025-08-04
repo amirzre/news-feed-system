@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 	"strings"
@@ -59,4 +60,76 @@ func parseLogLevel(level string) slog.Level {
 	default:
 		return slog.LevelInfo
 	}
+}
+
+// HTTP request logging helpers
+func (l *Logger) LogHTTPRequest(method, path string, statusCode int, duration int64) {
+	l.Info(
+		"HTTP request",
+		"method", method,
+		"path", path,
+		"status", statusCode,
+		"durationMS", duration,
+	)
+}
+
+// Database operation logging helpers
+func (l *Logger) LogDBOperation(operation, table string, duration int64, err error) {
+	if err != nil {
+		l.Error(
+			"Database operation failed",
+			"operation", operation,
+			"table", table,
+			"durationMs", duration,
+			"error", err.Error(),
+		)
+	} else {
+		l.Debug(
+			"Database operation completed",
+			"operation", operation,
+			"table", table,
+			"durationMS", duration,
+		)
+	}
+}
+
+// Service operation logging helpers
+func (l *Logger) LogServiceOperation(service, operation string, success bool, duration int64) {
+	fields := []any{
+		"service", service,
+		"operation", operation,
+		"success", success,
+		"durationMS", duration,
+	}
+
+	if success {
+		l.Info("Service operation completed", fields...)
+	} else {
+		l.Warn("Service operation failed", fields...)
+	}
+}
+
+// Cache operation logging helpers
+func (l *Logger) LogCacheOperation(operation, key string, hit bool) {
+	l.Debug(
+		"Cache operation",
+		"operation", operation,
+		"key", key,
+		"hit", hit,
+	)
+}
+
+// Startup logging helper
+func (l *Logger) LogStartup(service string, version string, port int) {
+	l.Info(fmt.Sprintf("%s started successfully", service),
+		"version", version,
+		"port", port,
+	)
+}
+
+// Shutdown logging helper
+func (l *Logger) LogShutdown(service string, reason string) {
+	l.Info(fmt.Sprintf("%s shutting down", service),
+		"reason", reason,
+	)
 }
