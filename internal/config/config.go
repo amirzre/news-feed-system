@@ -73,7 +73,7 @@ type CORSConfig struct {
 	MaxAge           int
 }
 
-// loads configuration from environment variables
+// Load loads configuration from environment variables
 func Load() (*Config, error) {
 	_ = godotenv.Load()
 
