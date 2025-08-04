@@ -11,13 +11,14 @@ import (
 )
 
 type Config struct {
-	Database DatabaseConfig
-	Redis    RedisConfig
-	Server   ServerConfig
-	NewsAPI  NewsAPIConfig
-	App      AppConfig
-	Cache    CacheConfig
-	CORS     CORSConfig
+	Database     DatabaseConfig
+	DatabasePool DatabasePoolConfig
+	Redis        RedisConfig
+	Server       ServerConfig
+	NewsAPI      NewsAPIConfig
+	App          AppConfig
+	Cache        CacheConfig
+	CORS         CORSConfig
 }
 
 type DatabaseConfig struct {
@@ -27,6 +28,14 @@ type DatabaseConfig struct {
 	Password string
 	Name     string
 	SSLMode  string
+}
+
+type DatabasePoolConfig struct {
+	MaxConns          int
+	MinConns          int
+	MaxConnLifetime   time.Duration
+	MaxConnIdleTime   time.Duration
+	HealthCheckPeriod time.Duration
 }
 
 type RedisConfig struct {
