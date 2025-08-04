@@ -11,13 +11,14 @@ import (
 )
 
 type Config struct {
-	Database DatabaseConfig
-	Redis    RedisConfig
-	Server   ServerConfig
-	NewsAPI  NewsAPIConfig
-	App      AppConfig
-	Cache    CacheConfig
-	CORS     CORSConfig
+	Database     DatabaseConfig
+	DatabasePool DatabasePoolConfig
+	Redis        RedisConfig
+	Server       ServerConfig
+	NewsAPI      NewsAPIConfig
+	App          AppConfig
+	Cache        CacheConfig
+	CORS         CORSConfig
 }
 
 type DatabaseConfig struct {
@@ -27,6 +28,14 @@ type DatabaseConfig struct {
 	Password string
 	Name     string
 	SSLMode  string
+}
+
+type DatabasePoolConfig struct {
+	MaxConns          int
+	MinConns          int
+	MaxConnLifetime   time.Duration
+	MaxConnIdleTime   time.Duration
+	HealthCheckPeriod time.Duration
 }
 
 type RedisConfig struct {
@@ -64,7 +73,7 @@ type CORSConfig struct {
 	MaxAge           int
 }
 
-// loads configuration from environment variables
+// Load loads configuration from environment variables
 func Load() (*Config, error) {
 	_ = godotenv.Load()
 
@@ -76,6 +85,13 @@ func Load() (*Config, error) {
 			Password: getEnv("DB_PASSWORD", ""),
 			Name:     getEnv("DB_NAME", "db"),
 			SSLMode:  getEnv("DB_SSL_MODE", "disable"),
+		},
+		DatabasePool: DatabasePoolConfig{
+			MaxConns:          getEnvInt("DB_MAX_CONNS", 25),
+			MinConns:          getEnvInt("DB_MIN_CONNS", 5),
+			MaxConnLifetime:   getEnvDuration("DB_MAX_CONN_LIFETIME", time.Hour),
+			MaxConnIdleTime:   getEnvDuration("DB_MAX_CONN_IDLE_TIME", 30*time.Minute),
+			HealthCheckPeriod: getEnvDuration("DB_HEALTH_CHECK_PERIOD", time.Minute),
 		},
 		Redis: RedisConfig{
 			Host:     getEnv("REDIS_HOST", "localhost"),
@@ -96,7 +112,7 @@ func Load() (*Config, error) {
 			LogLevel:    getEnv("LOG_LEVEL", "info"),
 		},
 		Cache: CacheConfig{
-			TTL: time.Duration(getEnvInt("CACHE_TTL", 3600)) * time.Second,
+			TTL: getEnvDuration("CACHE_TTL", 3600*time.Second),
 		},
 		CORS: CORSConfig{
 			AllowOrigins: getEnvStringSlice("CORS_ALLOW_ORIGINS", []string{"*"}),
@@ -186,6 +202,20 @@ func getEnvBool(key string, fallback bool) bool {
 	}
 
 	return fallback
+}
+
+func getEnvDuration(key string, fallback time.Duration) time.Duration {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+
+	duration, err := time.ParseDuration(value)
+	if err != nil {
+		return fallback
+	}
+
+	return duration
 }
 
 func getEnvStringSlice(key string, fallback []string) []string {
