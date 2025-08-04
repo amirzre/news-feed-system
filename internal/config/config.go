@@ -112,7 +112,7 @@ func Load() (*Config, error) {
 			LogLevel:    getEnv("LOG_LEVEL", "info"),
 		},
 		Cache: CacheConfig{
-			TTL: time.Duration(getEnvInt("CACHE_TTL", 3600)) * time.Second,
+			TTL: getEnvDuration("CACHE_TTL", 3600*time.Second),
 		},
 		CORS: CORSConfig{
 			AllowOrigins: getEnvStringSlice("CORS_ALLOW_ORIGINS", []string{"*"}),
