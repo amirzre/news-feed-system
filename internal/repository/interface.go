@@ -3,11 +3,14 @@ package repository
 import (
 	"context"
 
+	"github.com/amirzre/news-feed-system/internal/model"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
-type Querier interface{}
+type Querier interface{
+	CreatePost(ctx context.Context, arg model.CreatePostParams) (model.Post, error)
+}
 
 type DBTX interface{
 	Exec(context.Context, string, ...any) (pgconn.CommandTag, error)
