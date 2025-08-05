@@ -2,6 +2,8 @@
 APP_NAME := news-feed
 BINARY_NAME := main
 MAIN_PATH := ./cmd/server
+MIGRATION_PATH := ./migrations
+DATABASE_URL := postgres://postgres:postgres@localhost:5432/news_feed?sslmode=disable
 
 # Colors for output
 RED := \033[0;31m
@@ -100,3 +102,52 @@ docker-prod: ## Run production environment with docker compose
 docker-stop: ## Stop Docker containers
 	@echo "${YELLOW}Stopping Docker containers...${NC}"
 	docker compose down
+
+
+## Database Migrations
+.PHONY: migration-create
+migration-create: ## Create a new migration file (usage: make migration-create name=create_users_table)
+	@if [ -z "$(name)" ]; then \
+		echo "${RED}Error: name parameter is required${NC}"; \
+		echo "${YELLOW}Usage: make migration-create name=create_users_table${NC}"; \
+		exit 1; \
+	fi
+	@echo "${GREEN}Creating migration: $(name)${NC}"
+	migrate create -ext sql -dir $(MIGRATION_PATH) -seq $(name)
+
+.PHONY: migration-up
+migration-up: ## Run all pending migrations
+	@echo "${GREEN}Running migrations up...${NC}"
+	migrate -path $(MIGRATION_PATH) -database "$(DATABASE_URL)" up
+
+.PHONY: migration-down
+migration-down: ## Rollback the last migration
+	@echo "${YELLOW}Rolling back last migration...${NC}"
+	migrate -path $(MIGRATION_PATH) -database "$(DATABASE_URL)" down 1
+
+.PHONY: migration-down-all
+migration-down-all: ## Rollback all migrations (DANGER!)
+	@echo "${RED}WARNING: This will rollback ALL migrations!${NC}"
+	@read -p "Are you sure? [y/N] " -n 1 -r; \
+	echo; \
+	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+		migrate -path $(MIGRATION_PATH) -database "$(DATABASE_URL)" down -all; \
+	else \
+		echo "Cancelled."; \
+	fi
+
+.PHONY: migration-version
+migration-version: ## Show current migration version
+	@echo "${GREEN}Current migration version:${NC}"
+	migrate -path $(MIGRATION_PATH) -database "$(DATABASE_URL)" version
+
+.PHONY: migration-drop
+migration-drop: ## Drop everything in database (DANGER!)
+	@echo "${RED}WARNING: This will DROP ALL TABLES!${NC}"
+	@read -p "Are you sure? [y/N] " -n 1 -r; \
+	echo; \
+	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+		migrate -path $(MIGRATION_PATH) -database "$(DATABASE_URL)" drop; \
+	else \
+		echo "Cancelled."; \
+	fi
