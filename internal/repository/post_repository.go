@@ -34,8 +34,9 @@ func NewPostRepository(pool *pgxpool.Pool, redis *redis.Client, logger *logger.L
 
 // Create creates a new post
 func (r *postRepository) Create(ctx context.Context, req *model.CreatePostParams) (*model.Post, error) {
+	start := time.Now()
 	defer func() {
-		r.logger.LogDBOperation("create", "posts", int64(time.Since(time.Now()).Milliseconds()), nil)
+		r.logger.LogDBOperation("create", "posts", time.Since(start).Milliseconds(), nil)
 	}()
 
 	params := model.CreatePostParams{
@@ -51,7 +52,7 @@ func (r *postRepository) Create(ctx context.Context, req *model.CreatePostParams
 
 	post, err := r.db.CreatePost(ctx, params)
 	if err != nil {
-		r.logger.LogDBOperation("create", "posts", int64(time.Since(time.Now()).Milliseconds()), err)
+		r.logger.LogDBOperation("create", "posts", time.Since(start).Milliseconds(), err)
 	}
 
 	r.invalidateListCaches(ctx)
