@@ -10,6 +10,9 @@ import (
 	"time"
 
 	"github.com/amirzre/news-feed-system/internal/config"
+	"github.com/amirzre/news-feed-system/internal/handler"
+	"github.com/amirzre/news-feed-system/internal/repository"
+	"github.com/amirzre/news-feed-system/internal/service"
 	"github.com/amirzre/news-feed-system/pkg/database"
 	"github.com/amirzre/news-feed-system/pkg/logger"
 	"github.com/amirzre/news-feed-system/pkg/validator"
@@ -58,6 +61,14 @@ func main() {
 	e.HideBanner = true
 	e.HidePort = true
 	e.Validator = validator.NewValidator()
+
+	// Initialize repository and service layer
+	repo := repository.New(db.PG, db.Redis, log, cfg.Cache.TTL)
+	svc := service.New(repo, log)
+	h := handler.New(svc, log)
+
+	// Setup routes
+	handler.SetupRoutes(e, h)
 
 	// Start server in a goroutine
 	go func() {
