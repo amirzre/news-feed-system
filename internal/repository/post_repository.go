@@ -77,6 +77,45 @@ func (r *postRepository) Create(ctx context.Context, params *model.CreatePostPar
 	return &post, nil
 }
 
+// GetPostByURL retrieves a post by URL from database
+func (r *postRepository) GetPostByURL(ctx context.Context, url string) (*model.Post, error) {
+	start := time.Now()
+
+	query := `
+		SELECT id, title, description, content, url, source, category, image_url, published_at, created_at, updated_at
+		FROM posts WHERE url = $1 LIMIT 1
+	`
+
+	var post model.Post
+	var publishedAt sql.NullTime
+
+	err := r.db.QueryRow(ctx, query, url).Scan(
+		&post.ID,
+		&post.Title,
+		&post.Description,
+		&post.Content,
+		&post.URL,
+		&post.Source,
+		&post.Category,
+		&post.ImageURL,
+		&publishedAt,
+		&post.CreatedAt,
+		&post.UpdatedAt,
+	)
+	if err != nil {
+		r.logger.LogDBOperation("get_by_url", "posts", time.Since(start).Milliseconds(), err)
+		return nil, fmt.Errorf("Failed to get post by url: %w", err)
+	}
+
+	if publishedAt.Valid {
+		post.PublishedAt = &publishedAt.Time
+	}
+
+	r.logger.LogDBOperation("get_by_url", "posts", time.Since(start).Milliseconds(), nil)
+
+	return &post, nil
+}
+
 // Helper methods for cache invalidation
 func (r *postRepository) invalidatePostCaches(ctx context.Context, id int64) {
 	cacheKey := fmt.Sprintf("post:id:%d", id)
