@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -11,48 +12,64 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type PostRepository interface {
-	Create(ctx context.Context, req *model.CreatePostParams) (*model.Post, error)
-}
-
+// postRepository implements PostRepository interface with caching
 type postRepository struct {
-	db       Querier
+	db       *pgxpool.Pool
 	redis    *redis.Client
 	logger   *logger.Logger
 	cacheTTL time.Duration
 }
 
 // NewPostRepository creates a new post repository
-func NewPostRepository(pool *pgxpool.Pool, redis *redis.Client, logger *logger.Logger, cacheTTL time.Duration) PostRepository {
+func NewPostRepository(db *pgxpool.Pool, redis *redis.Client, logger *logger.Logger, cacheTTL time.Duration) PostRepository {
 	return &postRepository{
-		db:       New(pool),
+		db:       db,
 		redis:    redis,
 		logger:   logger,
 		cacheTTL: cacheTTL,
 	}
 }
 
-// Create creates a new post
-func (r *postRepository) Create(ctx context.Context, req *model.CreatePostParams) (*model.Post, error) {
-	start := time.Now()
-	defer func() {
-		r.logger.LogDBOperation("create", "posts", time.Since(start).Milliseconds(), nil)
-	}()
+// Create creates a new post in the database
+func (r *postRepository) Create(ctx context.Context, params *model.CreatePostParams) (*model.Post, error) {
+	query := `
+		INSERT INTO posts (title, description, content, url, source, category, image_url, published_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING id, title, description, content, url, source, category, image_url, published_at, created_at, updated_at
+	`
+	var post model.Post
+	var publishedAt sql.NullTime
 
-	params := model.CreatePostParams{
-		Title:       req.Title,
-		Description: req.Description,
-		Content:     req.Content,
-		URL:         req.URL,
-		Source:      req.Source,
-		Category:    req.Category,
-		ImageURL:    req.ImageURL,
-		PublishedAt: req.PublishedAt,
+	err := r.db.QueryRow(ctx, query,
+		params.Title,
+		params.Description,
+		params.Content,
+		params.URL,
+		params.Source,
+		params.Category,
+		params.ImageURL,
+		params.PublishedAt,
+	).Scan(
+		&post.ID,
+		&post.Title,
+		&post.Description,
+		&post.Content,
+		&post.URL,
+		&post.Source,
+		&post.Category,
+		&post.ImageURL,
+		&publishedAt,
+		&post.CreatedAt,
+		&post.UpdatedAt,
+	)
+
+	if err != nil {
+		r.logger.LogDBOperation("create", "posts", time.Since(time.Now()).Milliseconds(), err)
+		return nil, fmt.Errorf("Failed to create post: %w", err)
 	}
 
-	post, err := r.db.CreatePost(ctx, params)
-	if err != nil {
-		r.logger.LogDBOperation("create", "posts", time.Since(start).Milliseconds(), err)
+	if publishedAt.Valid {
+		post.PublishedAt = &publishedAt.Time
 	}
 
 	r.invalidateListCaches(ctx)
