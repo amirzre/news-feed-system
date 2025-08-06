@@ -35,12 +35,15 @@ func (h *PostHandler) CreatePost(c echo.Context) error {
 		return response.BadRequest(c, "Invalid request body", err.Error())
 	}
 
-	// TODO: validate request
+	if err := c.Validate(&req); err != nil {
+		h.logger.LogServiceOperation("post_handler", "create_post", false, time.Since(start).Milliseconds())
+		return response.ValidationError(c, err)
+	}
 
 	post, err := h.postService.CreatePost(c.Request().Context(), &req)
 	if err != nil {
 		h.logger.LogServiceOperation("post_handler", "create_post", false, time.Since(start).Milliseconds())
-		
+
 		if errors.Is(err, service.ErrPostExists) {
 			return response.Conflict(c, "Post with this URL already exists")
 		}
