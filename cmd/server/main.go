@@ -12,6 +12,7 @@ import (
 	"github.com/amirzre/news-feed-system/internal/config"
 	"github.com/amirzre/news-feed-system/pkg/database"
 	"github.com/amirzre/news-feed-system/pkg/logger"
+	"github.com/amirzre/news-feed-system/pkg/validator"
 	"github.com/labstack/echo/v4"
 )
 
@@ -56,6 +57,7 @@ func main() {
 	// Configure Echo
 	e.HideBanner = true
 	e.HidePort = true
+	e.Validator = validator.NewValidator()
 
 	// Start server in a goroutine
 	go func() {
