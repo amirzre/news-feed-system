@@ -12,21 +12,22 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type PostHandler struct {
+// postHandler implements PostHandler interface
+type postHandler struct {
 	postService service.PostService
 	logger      *logger.Logger
 }
 
 // NewPostHandler creates a new post handler
-func NewPostHandler(postService service.PostService, logger *logger.Logger) *PostHandler {
-	return &PostHandler{
+func NewPostHandler(postService service.PostService, logger *logger.Logger) PostHandler {
+	return &postHandler{
 		postService: postService,
 		logger:      logger,
 	}
 }
 
 // CreatePost handles POST /api/v1/posts
-func (h *PostHandler) CreatePost(c echo.Context) error {
+func (h *postHandler) CreatePost(c echo.Context) error {
 	start := time.Now()
 
 	var req model.CreatePostParams
