@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -27,11 +28,25 @@ func NewPostService(repo repository.PostRepository, logger *logger.Logger) PostS
 	}
 }
 
+var (
+	ErrPostExists = errors.New("post with this URL already exists")
+)
+
 // CreatePost creates a new post
 func (s *postService) CreatePost(ctx context.Context, req *model.CreatePostParams) (*model.Post, error) {
 	start := time.Now()
 
-	// TODO: check post exists with same URL
+	// TODO: check post exists with URL
+	exists, err := s.PostExists(ctx, req.URL)
+	if err != nil {
+		s.logger.LogServiceOperation("post", "create", false, time.Since(start).Milliseconds())
+		return nil, fmt.Errorf("failed to check post existence: %w", err)
+	}
+
+	if exists {
+		s.logger.LogServiceOperation("post", "create", false, time.Since(start).Milliseconds())
+		return nil, ErrPostExists
+	}
 
 	post, err := s.repo.Create(ctx, req)
 	if err != nil {
