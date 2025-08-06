@@ -9,6 +9,7 @@ import (
 	"github.com/amirzre/news-feed-system/internal/model"
 	"github.com/amirzre/news-feed-system/internal/repository"
 	"github.com/amirzre/news-feed-system/pkg/logger"
+	"github.com/jackc/pgx/v5"
 )
 
 // postService implements PostService interface
@@ -33,8 +34,7 @@ var (
 func (s *postService) CreatePost(ctx context.Context, req *model.CreatePostParams) (*model.Post, error) {
 	start := time.Now()
 
-	// TODO: check post exists with URL
-	exists, err := s.repo.ExistsByURL(ctx, req.URL)
+	exists, err := s.PostExists(ctx, req.URL)
 	if err != nil {
 		s.logger.LogServiceOperation("post", "create", false, time.Since(start).Milliseconds())
 		return nil, fmt.Errorf("Failed to check post existence: %w", err)
@@ -45,7 +45,7 @@ func (s *postService) CreatePost(ctx context.Context, req *model.CreatePostParam
 		return nil, ErrPostExists
 	}
 
-	post, err := s.repo.Create(ctx, req)
+	post, err := s.repo.CreatePost(ctx, req)
 	if err != nil {
 		s.logger.LogServiceOperation("post", "create", false, time.Since(start).Milliseconds())
 		return nil, fmt.Errorf("Failed to create post service: %w", err)
@@ -54,4 +54,21 @@ func (s *postService) CreatePost(ctx context.Context, req *model.CreatePostParam
 	s.logger.LogServiceOperation("post", "create", true, time.Since(start).Milliseconds())
 
 	return post, nil
+}
+
+// PostExists checks if a post with the given URL already exists
+func (s *postService) PostExists(ctx context.Context, url string) (bool, error) {
+	start := time.Now()
+
+	_, err := s.repo.GetPostByURL(ctx, url)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			s.logger.LogServiceOperation("post", "exists", false, time.Since(start).Milliseconds())
+			return false, nil
+		}
+	}
+
+	s.logger.LogServiceOperation("post", "exists", true, time.Since(start).Milliseconds())
+
+	return true, nil
 }

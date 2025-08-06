@@ -12,7 +12,7 @@ import (
 
 // PostRepository defines the contract for post data operations
 type PostRepository interface {
-	Create(ctx context.Context, params *model.CreatePostParams) (*model.Post, error)
+	CreatePost(ctx context.Context, params *model.CreatePostParams) (*model.Post, error)
 	GetPostByURL(ctx context.Context, url string) (*model.Post, error)
 }
 

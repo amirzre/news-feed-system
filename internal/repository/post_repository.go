@@ -31,7 +31,7 @@ func NewPostRepository(db *pgxpool.Pool, redis *redis.Client, logger *logger.Log
 }
 
 // Create creates a new post in the database
-func (r *postRepository) Create(ctx context.Context, params *model.CreatePostParams) (*model.Post, error) {
+func (r *postRepository) CreatePost(ctx context.Context, params *model.CreatePostParams) (*model.Post, error) {
 	query := `
 		INSERT INTO posts (title, description, content, url, source, category, image_url, published_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
