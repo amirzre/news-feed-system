@@ -11,10 +11,7 @@ import (
 	"github.com/amirzre/news-feed-system/pkg/logger"
 )
 
-type PostService interface {
-	CreatePost(ctx context.Context, req *model.CreatePostParams) (*model.Post, error)
-}
-
+// postService implements PostService interface
 type postService struct {
 	repo   repository.PostRepository
 	logger *logger.Logger
@@ -37,10 +34,10 @@ func (s *postService) CreatePost(ctx context.Context, req *model.CreatePostParam
 	start := time.Now()
 
 	// TODO: check post exists with URL
-	exists, err := s.PostExists(ctx, req.URL)
+	exists, err := s.repo.ExistsByURL(ctx, req.URL)
 	if err != nil {
 		s.logger.LogServiceOperation("post", "create", false, time.Since(start).Milliseconds())
-		return nil, fmt.Errorf("failed to check post existence: %w", err)
+		return nil, fmt.Errorf("Failed to check post existence: %w", err)
 	}
 
 	if exists {
