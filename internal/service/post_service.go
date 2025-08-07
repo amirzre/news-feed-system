@@ -114,6 +114,37 @@ func (s *postService) UpdatePost(ctx context.Context, id int64, req *model.Updat
 	return post, nil
 }
 
+// DeletePost deletes a post
+func (s *postService) DeletePost(ctx context.Context, id int64) error {
+	start := time.Now()
+
+	if id <= 0 {
+		s.logger.LogServiceOperation("post", "delete", false, time.Since(start).Milliseconds())
+		return ErrPostIDInvalid
+	}
+
+	_, err := s.repo.GetPostByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			s.logger.LogServiceOperation("post", "delete", false, time.Since(start).Milliseconds())
+			return ErrPostNotFound
+		}
+
+		s.logger.LogServiceOperation("post", "delete", false, time.Since(start).Milliseconds())
+		return fmt.Errorf("Failed to check post existence: %w", err)
+	}
+
+	err = s.repo.DeletePost(ctx, id)
+	if err != nil {
+		s.logger.LogServiceOperation("post", "delete", false, time.Since(start).Milliseconds())
+		return fmt.Errorf("Failed to delete post: %w", err)
+	}
+
+	s.logger.LogServiceOperation("post", "delete", true, time.Since(start).Milliseconds())
+
+	return nil
+}
+
 // PostExists checks if a post with the given URL already exists
 func (s *postService) PostExists(ctx context.Context, url string) (bool, error) {
 	start := time.Now()
