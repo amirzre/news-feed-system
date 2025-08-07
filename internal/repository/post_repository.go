@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -73,6 +74,59 @@ func (r *postRepository) CreatePost(ctx context.Context, params *model.CreatePos
 	}
 
 	r.invalidateListCaches(ctx)
+
+	return &post, nil
+}
+
+// GetPostByID retrieves a post by ID with caching
+func (r *postRepository) GetPostByID(ctx context.Context, id int64) (*model.Post, error) {
+	start := time.Now()
+	cacheKey := fmt.Sprintf("post:id:%d", id)
+
+	cached, err := r.redis.Get(ctx, cacheKey).Result()
+	if err == nil {
+		var post model.Post
+		if err := json.Unmarshal([]byte(cached), &post); err == nil {
+			r.logger.LogCacheOperation("get", cacheKey, true)
+			return &post, nil
+		}
+	}
+	r.logger.LogCacheOperation("get", cacheKey, false)
+
+	query := `
+		SELECT id, title, description, content, url, source, category, image_url, published_at, created_at, updated_at
+		FROM posts WHERE id = $1 LIMIT 1
+	`
+	var post model.Post
+	var publishedAt sql.NullTime
+
+	err = r.db.QueryRow(ctx, query, id).Scan(
+		&post.ID,
+		&post.Title,
+		&post.Description,
+		&post.Content,
+		&post.URL,
+		&post.Source,
+		&post.Category,
+		&post.ImageURL,
+		&publishedAt,
+		&post.CreatedAt,
+		&post.UpdatedAt,
+	)
+	if err != nil {
+		r.logger.LogDBOperation("get_by_id", "posts", time.Since(start).Milliseconds(), err)
+		return nil, fmt.Errorf("Failed to get post by id: %w", err)
+	}
+	if publishedAt.Valid {
+		post.PublishedAt = &publishedAt.Time
+	}
+
+	r.logger.LogDBOperation("get_by_id", "posts", time.Since(start).Milliseconds(), nil)
+
+	if postJson, err := json.Marshal(post); err == nil {
+		r.redis.Set(ctx, cacheKey, postJson, r.cacheTTL).Err()
+		r.logger.LogCacheOperation("set", cacheKey, false)
+	}
 
 	return &post, nil
 }

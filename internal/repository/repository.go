@@ -14,6 +14,7 @@ import (
 type PostRepository interface {
 	CreatePost(ctx context.Context, params *model.CreatePostParams) (*model.Post, error)
 	GetPostByURL(ctx context.Context, url string) (*model.Post, error)
+	GetPostByID(ctx context.Context, id int64) (*model.Post, error)
 }
 
 // Repository holds all repository implementations
