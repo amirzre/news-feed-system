@@ -122,3 +122,30 @@ func (h *postHandler) UpdatePost(c echo.Context) error {
 
 	return response.Success(c, http.StatusOK, post, "Post updated successfully")
 }
+
+// DeletePost handles DELETE /api/v1/posts/:id
+func (h *postHandler) DeletePost(c echo.Context) error {
+	start := time.Now()
+
+	idParam := c.Param("id")
+	id, err := strconv.ParseInt(idParam, 10, 32)
+	if err != nil || id <= 0 {
+		h.logger.LogServiceOperation("post_handler", "delete_post", false, time.Since(start).Milliseconds())
+		return response.BadRequest(c, "Invalid post ID")
+	}
+
+	err = h.postService.DeletePost(c.Request().Context(), id)
+	if err != nil {
+		h.logger.LogServiceOperation("post_handler", "delete_post", false, time.Since(start).Milliseconds())
+
+		if errors.Is(err, service.ErrPostNotFound) {
+			return response.NotFound(c, "Post not found")
+		}
+
+		return response.InternalServerError(c, "Failed to delete post")
+	}
+
+	h.logger.LogServiceOperation("post_handler", "delete_post", true, time.Since(start).Milliseconds())
+
+	return response.Success(c, http.StatusNoContent, nil, "Post deleted successfully")
+}
