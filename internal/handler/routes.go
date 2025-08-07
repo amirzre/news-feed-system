@@ -10,4 +10,5 @@ func SetupRoutes(e *echo.Echo, h *Handler) {
 	// Post routes
 	posts := api.Group("/posts")
 	posts.POST("", h.Post.CreatePost)
+	posts.GET("/:id", h.Post.GetPostByID)
 }
