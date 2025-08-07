@@ -84,3 +84,41 @@ func (h *postHandler) GetPostByID(c echo.Context) error {
 
 	return response.Success(c, http.StatusOK, post)
 }
+
+// UpdatePost handles PUT /api/v1/posts/:id
+func (h *postHandler) UpdatePost(c echo.Context) error {
+	start := time.Now()
+
+	idParam := c.Param("id")
+	id, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		h.logger.LogServiceOperation("post_handler", "update_post", false, time.Since(start).Milliseconds())
+		return response.BadRequest(c, "Invalid post ID")
+	}
+
+	var req model.UpdatePostParams
+	if err := c.Bind(&req); err != nil {
+		h.logger.LogServiceOperation("post_handler", "update_post", false, time.Since(start).Milliseconds())
+		return response.BadRequest(c, "Invalid request body", err.Error())
+	}
+
+	if err := c.Validate(&req); err != nil {
+		h.logger.LogServiceOperation("post_handler", "update_post", false, time.Since(start).Milliseconds())
+		return response.ValidationError(c, err)
+	}
+
+	post, err := h.postService.UpdatePost(c.Request().Context(), id, &req)
+	if err != nil {
+		h.logger.LogServiceOperation("post_handler", "update_post", false, time.Since(start).Milliseconds())
+
+		if errors.Is(err, service.ErrPostNotFound) {
+			return response.NotFound(c, "Post not found")
+		}
+
+		return response.InternalServerError(c, "Failed to update post")
+	}
+
+	h.logger.LogServiceOperation("post_handler", "update_post", true, time.Since(start).Milliseconds())
+
+	return response.Success(c, http.StatusOK, post, "Post updated successfully")
+}

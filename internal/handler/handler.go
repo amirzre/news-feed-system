@@ -10,6 +10,7 @@ import (
 type PostHandler interface {
 	CreatePost(c echo.Context) error
 	GetPostByID(c echo.Context) error
+	UpdatePost(c echo.Context) error
 }
 
 // Handler holds all handler implementations
