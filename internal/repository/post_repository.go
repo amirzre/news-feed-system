@@ -78,6 +78,45 @@ func (r *postRepository) CreatePost(ctx context.Context, params *model.CreatePos
 	return &post, nil
 }
 
+// GetPostByURL retrieves a post by URL from database
+func (r *postRepository) GetPostByURL(ctx context.Context, url string) (*model.Post, error) {
+	start := time.Now()
+
+	query := `
+		SELECT id, title, description, content, url, source, category, image_url, published_at, created_at, updated_at
+		FROM posts WHERE url = $1 LIMIT 1
+	`
+
+	var post model.Post
+	var publishedAt sql.NullTime
+
+	err := r.db.QueryRow(ctx, query, url).Scan(
+		&post.ID,
+		&post.Title,
+		&post.Description,
+		&post.Content,
+		&post.URL,
+		&post.Source,
+		&post.Category,
+		&post.ImageURL,
+		&publishedAt,
+		&post.CreatedAt,
+		&post.UpdatedAt,
+	)
+	if err != nil {
+		r.logger.LogDBOperation("get_by_url", "posts", time.Since(start).Milliseconds(), err)
+		return nil, fmt.Errorf("Failed to get post by url: %w", err)
+	}
+
+	if publishedAt.Valid {
+		post.PublishedAt = &publishedAt.Time
+	}
+
+	r.logger.LogDBOperation("get_by_url", "posts", time.Since(start).Milliseconds(), nil)
+
+	return &post, nil
+}
+
 // GetPostByID retrieves a post by ID with caching
 func (r *postRepository) GetPostByID(ctx context.Context, id int64) (*model.Post, error) {
 	start := time.Now()
@@ -180,43 +219,28 @@ func (r *postRepository) UpdatePost(ctx context.Context, id int64, params *model
 	return &post, nil
 }
 
-// GetPostByURL retrieves a post by URL from database
-func (r *postRepository) GetPostByURL(ctx context.Context, url string) (*model.Post, error) {
+// DeletePost deletes a post from the database
+func (r *postRepository) DeletePost(ctx context.Context, id int64) error {
 	start := time.Now()
 
-	query := `
-		SELECT id, title, description, content, url, source, category, image_url, published_at, created_at, updated_at
-		FROM posts WHERE url = $1 LIMIT 1
-	`
+	query := `DELETE FROM posts WHERE id = $1`
 
-	var post model.Post
-	var publishedAt sql.NullTime
-
-	err := r.db.QueryRow(ctx, query, url).Scan(
-		&post.ID,
-		&post.Title,
-		&post.Description,
-		&post.Content,
-		&post.URL,
-		&post.Source,
-		&post.Category,
-		&post.ImageURL,
-		&publishedAt,
-		&post.CreatedAt,
-		&post.UpdatedAt,
-	)
+	post, err := r.db.Exec(ctx, query, id)
 	if err != nil {
-		r.logger.LogDBOperation("get_by_url", "posts", time.Since(start).Milliseconds(), err)
-		return nil, fmt.Errorf("Failed to get post by url: %w", err)
+		r.logger.LogDBOperation("delete", "posts", time.Since(start).Milliseconds(), err)
+		return fmt.Errorf("Failed to delete post: %w", err)
 	}
 
-	if publishedAt.Valid {
-		post.PublishedAt = &publishedAt.Time
+	if post.RowsAffected() == 0 {
+		return fmt.Errorf("Post with id %d not found", id)
 	}
 
-	r.logger.LogDBOperation("get_by_url", "posts", time.Since(start).Milliseconds(), nil)
+	r.logger.LogDBOperation("delete", "posts", time.Since(start).Milliseconds(), nil)
 
-	return &post, nil
+	r.invalidatePostCaches(ctx, id)
+	r.invalidateListCaches(ctx)
+
+	return nil
 }
 
 // Helper methods for cache invalidation
