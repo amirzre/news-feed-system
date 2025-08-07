@@ -27,3 +27,12 @@ type CreatePostParams struct {
 	ImageURL    *string    `json:"image_url,omitempty" validate:"omitempty,url,max=1000"`
 	PublishedAt *time.Time `json:"published_at,omitempty"`
 }
+
+// UpdatePostRequest represents the request to update a post
+type UpdatePostParams struct {
+	Title       string  `json:"title" validate:"min=1,max=500"`
+	Description *string `json:"description,omitempty"`
+	Content     *string `json:"content,omitempty"`
+	Category    *string `json:"category,omitempty" validate:"omitempty,max=50"`
+	ImageURL    *string `json:"image_url,omitempty" validate:"omitempty,url,max=1000"`
+}
