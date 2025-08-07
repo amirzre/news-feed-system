@@ -131,6 +131,55 @@ func (r *postRepository) GetPostByID(ctx context.Context, id int64) (*model.Post
 	return &post, nil
 }
 
+// UpdatePost updates a post in the database
+func (r *postRepository) UpdatePost(ctx context.Context, id int64, params *model.UpdatePostParams) (*model.Post, error) {
+	start := time.Now()
+
+	query := `
+		UPDATE posts 
+		SET title = $2, description = $3, content = $4, category = $5, image_url = $6, updated_at = NOW()
+		WHERE id = $1 
+		RETURNING id, title, description, content, url, source, category, image_url, published_at, created_at, updated_at
+	`
+	var post model.Post
+	var publishedAt sql.NullTime
+
+	err := r.db.QueryRow(ctx, query, id,
+		params.Title,
+		params.Description,
+		params.Content,
+		params.Category,
+		params.ImageURL,
+	).Scan(
+		&post.ID,
+		&post.Title,
+		&post.Description,
+		&post.Content,
+		&post.URL,
+		&post.Source,
+		&post.Category,
+		&post.ImageURL,
+		&publishedAt,
+		&post.CreatedAt,
+		&post.UpdatedAt,
+	)
+	if err != nil {
+		r.logger.LogDBOperation("update", "posts", time.Since(start).Milliseconds(), err)
+		return nil, fmt.Errorf("Failed to update post: %w", err)
+	}
+
+	if publishedAt.Valid {
+		post.PublishedAt = &publishedAt.Time
+	}
+
+	r.logger.LogDBOperation("update", "posts", time.Since(start).Milliseconds(), nil)
+
+	r.invalidatePostCaches(ctx, id)
+	r.invalidateListCaches(ctx)
+
+	return &post, nil
+}
+
 // GetPostByURL retrieves a post by URL from database
 func (r *postRepository) GetPostByURL(ctx context.Context, url string) (*model.Post, error) {
 	start := time.Now()
