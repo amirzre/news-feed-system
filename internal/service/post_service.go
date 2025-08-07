@@ -83,6 +83,37 @@ func (s *postService) GetPostByID(ctx context.Context, id int64) (*model.Post, e
 	return post, nil
 }
 
+// UpdatePost updates an existing post
+func (s *postService) UpdatePost(ctx context.Context, id int64, req *model.UpdatePostParams) (*model.Post, error) {
+	start := time.Now()
+
+	if id <= 0 {
+		s.logger.LogServiceOperation("post", "update", false, time.Since(start).Milliseconds())
+		return nil, ErrPostIDInvalid
+	}
+
+	_, err := s.repo.GetPostByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			s.logger.LogServiceOperation("post", "update", false, time.Since(start).Milliseconds())
+			return nil, ErrPostNotFound
+		}
+
+		s.logger.LogServiceOperation("post", "update", false, time.Since(start).Milliseconds())
+		return nil, fmt.Errorf("Failed to check post existence: %w", err)
+	}
+
+	post, err := s.repo.UpdatePost(ctx, id, req)
+	if err != nil {
+		s.logger.LogServiceOperation("post", "update", false, time.Since(start).Milliseconds())
+		return nil, fmt.Errorf("Failed to update post: %w", err)
+	}
+
+	s.logger.LogServiceOperation("post", "update", true, time.Since(start).Milliseconds())
+
+	return post, nil
+}
+
 // PostExists checks if a post with the given URL already exists
 func (s *postService) PostExists(ctx context.Context, url string) (bool, error) {
 	start := time.Now()
