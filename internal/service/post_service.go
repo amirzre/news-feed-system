@@ -27,7 +27,9 @@ func NewPostService(repo repository.PostRepository, logger *logger.Logger) PostS
 }
 
 var (
-	ErrPostExists = errors.New("post with this URL already exists")
+	ErrPostExists    = errors.New("post with this URL already exists")
+	ErrPostIDInvalid = errors.New("post ID is invalid")
+	ErrPostNotFound  = errors.New("post not found")
 )
 
 // CreatePost creates a new post
@@ -52,6 +54,31 @@ func (s *postService) CreatePost(ctx context.Context, req *model.CreatePostParam
 	}
 
 	s.logger.LogServiceOperation("post", "create", true, time.Since(start).Milliseconds())
+
+	return post, nil
+}
+
+// GetPostByID retrieves a post by ID
+func (s *postService) GetPostByID(ctx context.Context, id int64) (*model.Post, error) {
+	start := time.Now()
+
+	if id <= 0 {
+		s.logger.LogServiceOperation("post", "get_by_id", false, time.Since(start).Milliseconds())
+		return nil, ErrPostIDInvalid
+	}
+
+	post, err := s.repo.GetPostByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			s.logger.LogServiceOperation("post", "get_by_id", false, time.Since(start).Milliseconds())
+			return nil, ErrPostNotFound
+		}
+
+		s.logger.LogServiceOperation("post", "get_by_id", false, time.Since(start).Milliseconds())
+		return nil, fmt.Errorf("Failed to get post: %w", err)
+	}
+
+	s.logger.LogServiceOperation("post", "get_by_id", true, time.Since(start).Milliseconds())
 
 	return post, nil
 }

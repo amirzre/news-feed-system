@@ -12,6 +12,7 @@ import (
 type PostService interface {
 	CreatePost(ctx context.Context, req *model.CreatePostParams) (*model.Post, error)
 	PostExists(ctx context.Context, url string) (bool, error)
+	GetPostByID(ctx context.Context, id int64) (*model.Post, error)
 }
 
 // Service holds all service implementations
