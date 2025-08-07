@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/amirzre/news-feed-system/internal/model"
@@ -55,4 +56,31 @@ func (h *postHandler) CreatePost(c echo.Context) error {
 	h.logger.LogServiceOperation("post_handler", "create_post", true, time.Since(start).Milliseconds())
 
 	return response.Success(c, http.StatusCreated, post, "Post created successfully")
+}
+
+// GetPost handles GET /api/v1/posts/:id
+func (h *postHandler) GetPostByID(c echo.Context) error {
+	start := time.Now()
+
+	idParam := c.Param("id")
+	id, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil || id <= 0 {
+		h.logger.LogServiceOperation("post_handler", "get_post", false, time.Since(start).Milliseconds())
+		return response.BadRequest(c, "Invalid post ID")
+	}
+
+	post, err := h.postService.GetPostByID(c.Request().Context(), id)
+	if err != nil {
+		h.logger.LogServiceOperation("post_handler", "get_post", false, time.Since(start).Milliseconds())
+
+		if errors.Is(err, service.ErrPostNotFound) {
+			return response.NotFound(c, "Post not found")
+		}
+
+		return response.InternalServerError(c, "Failed to retrieve post")
+	}
+
+	h.logger.LogServiceOperation("post_handler", "get_post", true, time.Since(start).Milliseconds())
+
+	return response.Success(c, http.StatusOK, post)
 }
