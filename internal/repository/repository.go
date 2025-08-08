@@ -21,6 +21,7 @@ type PostRepository interface {
 	CountPostsByCategory(ctx context.Context, category string) (int64, error)
 	ListPostByCategory(ctx context.Context, params *model.ListPostsByCategoryParams) (*[]model.Post, error)
 	ListPostsBySource(ctx context.Context, params *model.ListPostsBySourceParams) (*[]model.Post, error)
+	SearchPost(ctx context.Context, params *model.SearchPostsParams) (*[]model.Post, error)
 }
 
 // Repository holds all repository implementations
