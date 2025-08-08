@@ -243,6 +243,60 @@ func (r *postRepository) DeletePost(ctx context.Context, id int64) error {
 	return nil
 }
 
+// ListPostByCategory retrieves posts by category
+func (r *postRepository) ListPostByCategory(ctx context.Context, params *model.ListPostsByCategoryParams) (*[]model.Post, error) {
+	start := time.Now()
+
+	query := `
+		SELECT id, title, description, content, url, source, category, image_url, published_at, created_at, updated_at
+		FROM posts WHERE category = $1 ORDER BY published_at DESC LIMIT $2 OFFSET $3
+	`
+	rows, err := r.db.Query(ctx, query, params.Category, params.Limit, params.Offset)
+	if err != nil {
+		r.logger.LogDBOperation("list_by_category", "posts", time.Since(start).Milliseconds(), err)
+		return nil, fmt.Errorf("Failed to list posts by category: %w", err)
+	}
+	defer rows.Close()
+
+	var posts []model.Post
+	for rows.Next() {
+		var post model.Post
+		var publishedAt sql.NullTime
+
+		err = rows.Scan(
+			&post.ID,
+			&post.Title,
+			&post.Description,
+			&post.Content,
+			&post.URL,
+			&post.Source,
+			&post.Category,
+			&post.ImageURL,
+			&publishedAt,
+			&post.CreatedAt,
+			&post.UpdatedAt,
+		)
+		if err != nil {
+			r.logger.LogDBOperation("list_by_category", "posts", time.Since(start).Milliseconds(), err)
+			return nil, fmt.Errorf("Failed to scan post: %w", err)
+		}
+		if publishedAt.Valid {
+			post.PublishedAt = &publishedAt.Time
+		}
+
+		posts = append(posts, post)
+	}
+
+	if err := rows.Err(); err != nil {
+		r.logger.LogDBOperation("list_by_category", "posts", time.Since(start).Milliseconds(), err)
+		return nil, fmt.Errorf("Failed to iterate posts by category: %w", err)
+	}
+
+	r.logger.LogDBOperation("list_by_category", "posts", time.Since(start).Milliseconds(), nil)
+
+	return &posts, nil
+}
+
 // CountPosts counts all posts
 func (r *postRepository) CountPosts(ctx context.Context) (int64, error) {
 	start := time.Now()
