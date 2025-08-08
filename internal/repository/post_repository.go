@@ -277,6 +277,24 @@ func (r *postRepository) CountPosts(ctx context.Context) (int64, error) {
 	return count, nil
 }
 
+// CountByCategory returns the number of posts in a category
+func (r *postRepository) CountPostsByCategory(ctx context.Context, category string) (int64, error) {
+	start := time.Now()
+
+	query := `SELECT COUNT(*) FROM posts WHERE category = $1`
+
+	var count int64
+	err := r.db.QueryRow(ctx, query, category).Scan(&count)
+	if err != nil {
+		r.logger.LogDBOperation("count_by_category", "posts", time.Since(start).Milliseconds(), err)
+		return 0, fmt.Errorf("Failed to count posts by category: %w", err)
+	}
+
+	r.logger.LogDBOperation("count_by_category", "posts", time.Since(start).Milliseconds(), nil)
+
+	return count, nil
+}
+
 // Helper methods for cache invalidation
 func (r *postRepository) invalidatePostCaches(ctx context.Context, id int64) {
 	cacheKey := fmt.Sprintf("post:id:%d", id)
