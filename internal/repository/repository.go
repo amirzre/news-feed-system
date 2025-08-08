@@ -17,6 +17,7 @@ type PostRepository interface {
 	GetPostByID(ctx context.Context, id int64) (*model.Post, error)
 	UpdatePost(ctx context.Context, id int64, params *model.UpdatePostParams) (*model.Post, error)
 	DeletePost(ctx context.Context, id int64) error
+	CountPosts(ctx context.Context) (int64, error)
 }
 
 // Repository holds all repository implementations

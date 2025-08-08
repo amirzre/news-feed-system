@@ -243,6 +243,40 @@ func (r *postRepository) DeletePost(ctx context.Context, id int64) error {
 	return nil
 }
 
+// CountPosts counts all posts
+func (r *postRepository) CountPosts(ctx context.Context) (int64, error) {
+	start := time.Now()
+	cacheKey := "posts:count"
+
+	cached, err := r.redis.Get(ctx, cacheKey).Result()
+	if err == nil {
+		var count int64
+		if err := json.Unmarshal([]byte(cached), &count); err == nil {
+			r.logger.LogCacheOperation("get", cacheKey, true)
+			return count, nil
+		}
+	}
+	r.logger.LogCacheOperation("get", cacheKey, false)
+
+	query := `SELECT COUNT(*) FROM posts`
+
+	var count int64
+	err = r.db.QueryRow(ctx, query).Scan(&count)
+	if err != nil {
+		r.logger.LogDBOperation("count", "posts", time.Since(start).Milliseconds(), err)
+		return 0, fmt.Errorf("Failed to count posts: %w", err)
+	}
+
+	r.logger.LogDBOperation("count", "posts", time.Since(start).Milliseconds(), nil)
+
+	if countJSON, err := json.Marshal(count); err == nil {
+		r.redis.Set(ctx, cacheKey, countJSON, r.cacheTTL).Err()
+		r.logger.LogCacheOperation("set", cacheKey, false)
+	}
+
+	return count, nil
+}
+
 // Helper methods for cache invalidation
 func (r *postRepository) invalidatePostCaches(ctx context.Context, id int64) {
 	cacheKey := fmt.Sprintf("post:id:%d", id)
