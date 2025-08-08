@@ -11,6 +11,10 @@ import (
 // PostService defines the contract for post business operations
 type PostService interface {
 	CreatePost(ctx context.Context, req *model.CreatePostParams) (*model.Post, error)
+	PostExists(ctx context.Context, url string) (bool, error)
+	GetPostByID(ctx context.Context, id int64) (*model.Post, error)
+	UpdatePost(ctx context.Context, id int64, req *model.UpdatePostParams) (*model.Post, error)
+	DeletePost(ctx context.Context, id int64) error
 }
 
 // Service holds all service implementations
