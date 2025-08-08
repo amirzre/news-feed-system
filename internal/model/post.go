@@ -36,3 +36,52 @@ type UpdatePostParams struct {
 	Category    *string `json:"category,omitempty" validate:"omitempty,max=50"`
 	ImageURL    *string `json:"image_url,omitempty" validate:"omitempty,url,max=1000"`
 }
+
+// BasePostListParams
+type BasePostListParams struct {
+	Limit  int64 `json:"limit"`
+	Offset int64 `json:"offset"`
+}
+
+// PostListRequest represents the request parameters for listing posts
+type PostListParams struct {
+	Page     int     `json:"page" validate:"min=1"`
+	Limit    int     `json:"limit" validate:"min=1,max=100"`
+	Category *string `json:"category,omitempty"`
+	Source   *string `json:"source,omitempty"`
+	Search   *string `json:"search,omitempty"`
+}
+
+// PostListResponse represents the response for listing posts
+type PostListResponse struct {
+	Posts      []Post         `json:"posts"`
+	Pagination PaginationMeta `json:"pagination"`
+}
+
+// PaginationMeta represents pagination metadata
+type PaginationMeta struct {
+	Page       int   `json:"page"`
+	Limit      int   `json:"limit"`
+	Total      int64 `json:"total"`
+	TotalPages int   `json:"total_pages"`
+	HasNext    bool  `json:"has_next"`
+	HasPrev    bool  `json:"has_prev"`
+}
+
+// ListPostsByCategoryParams
+type ListPostsByCategoryParams struct {
+	BasePostListParams
+	Category *string `json:"category"`
+}
+
+// ListPostsBySourceParams
+type ListPostsBySourceParams struct {
+	BasePostListParams
+	Source string `json:"source"`
+}
+
+// SearchPostsParams
+type SearchPostsParams struct {
+	BasePostListParams
+	Column1 *string `json:"column_1"`
+}
