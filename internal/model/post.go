@@ -85,3 +85,28 @@ type SearchPostsParams struct {
 	BasePostListParams
 	Query string `json:"query"`
 }
+
+// DefaultPostListParams returns default values for post list request
+func DefaultPostListParams() PostListParams {
+	return PostListParams{
+		Page:  1,
+		Limit: 20,
+	}
+}
+
+// CalculatePagination calculates pagination metadata
+func CalculatePagination(page, limit int, total int64) PaginationMeta {
+	totalPages := int(((total + int64(limit)) - 1) / int64(limit))
+	if totalPages == 0 {
+		totalPages = 1
+	}
+
+	return PaginationMeta{
+		Page:       page,
+		Limit:      limit,
+		Total:      total,
+		TotalPages: totalPages,
+		HasNext:    page < totalPages,
+		HasPrev:    page > 1,
+	}
+}
