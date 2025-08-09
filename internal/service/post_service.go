@@ -83,6 +83,50 @@ func (s *postService) GetPostByID(ctx context.Context, id int64) (*model.Post, e
 	return post, nil
 }
 
+// ListPosts retrieves posts with pagination and filtering
+func (s *postService) ListPosts(ctx context.Context, req *model.PostListParams) (*model.PostListResponse, error) {
+	start := time.Now()
+
+	if req.Page <= 0 {
+		req.Page = 1
+	}
+	if req.Limit <= 0 {
+		req.Limit = 20
+	}
+	if req.Limit > 100 {
+		req.Limit = 100
+	}
+
+	posts, err := s.repo.ListPosts(ctx, req)
+	if err != nil {
+		s.logger.LogServiceOperation("post", "list", false, time.Since(start).Milliseconds())
+		return nil, fmt.Errorf("Failed to list posts: %w", err)
+	}
+
+	var total int64
+	if req.Category != nil && *req.Category != "" {
+		total, err = s.repo.CountPostsByCategory(ctx, *req.Category)
+	} else {
+		total, err = s.repo.CountPosts(ctx)
+	}
+
+	if err != nil {
+		s.logger.LogServiceOperation("post", "list", false, time.Since(start).Milliseconds())
+		return nil, fmt.Errorf("Failed to count posts: %w", err)
+	}
+
+	pagination := model.CalculatePagination(req.Page, req.Limit, total)
+
+	response := &model.PostListResponse{
+		Posts:      posts,
+		Pagination: pagination,
+	}
+
+	s.logger.LogServiceOperation("post", "list", true, time.Since(start).Milliseconds())
+
+	return response, nil
+}
+
 // UpdatePost updates an existing post
 func (s *postService) UpdatePost(ctx context.Context, id int64, req *model.UpdatePostParams) (*model.Post, error) {
 	start := time.Now()
