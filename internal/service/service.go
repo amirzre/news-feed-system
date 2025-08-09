@@ -13,6 +13,7 @@ type PostService interface {
 	CreatePost(ctx context.Context, req *model.CreatePostParams) (*model.Post, error)
 	PostExists(ctx context.Context, url string) (bool, error)
 	GetPostByID(ctx context.Context, id int64) (*model.Post, error)
+	ListPosts(ctx context.Context, req *model.PostListParams) (*model.PostListResponse, error)
 	UpdatePost(ctx context.Context, id int64, req *model.UpdatePostParams) (*model.Post, error)
 	DeletePost(ctx context.Context, id int64) error
 }

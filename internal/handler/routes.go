@@ -9,6 +9,7 @@ func SetupRoutes(e *echo.Echo, h *Handler) {
 
 	// Post routes
 	posts := api.Group("/posts")
+	posts.GET("", h.Post.ListPosts)
 	posts.POST("", h.Post.CreatePost)
 	posts.GET("/:id", h.Post.GetPostByID)
 	posts.PUT("/:id", h.Post.UpdatePost)

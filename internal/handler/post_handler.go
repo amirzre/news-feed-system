@@ -85,6 +85,64 @@ func (h *postHandler) GetPostByID(c echo.Context) error {
 	return response.Success(c, http.StatusOK, post)
 }
 
+// ListPosts handles GET /api/v1/posts with pagination, filtering, and search
+func (h *postHandler) ListPosts(c echo.Context) error {
+	start := time.Now()
+
+	req := model.DefaultPostListParams()
+
+	if pageParam := c.QueryParam("page"); pageParam != "" {
+		if page, err := strconv.Atoi(pageParam); err == nil && page > 0 {
+			req.Page = page
+		}
+	}
+
+	if limitParam := c.QueryParam("limit"); limitParam != "" {
+		if limit, err := strconv.Atoi(limitParam); err == nil && limit > 0 {
+			req.Limit = limit
+		}
+	}
+
+	filters := make(map[string]string)
+	if category := c.QueryParam("category"); category != "" {
+		req.Category = &category
+		filters["category"] = category
+	}
+
+	if source := c.QueryParam("source"); source != "" {
+		req.Source = &source
+		filters["source"] = source
+	}
+
+	if search := c.QueryParam("search"); search != "" {
+		req.Search = &search
+		filters["search"] = search
+	}
+
+	if err := c.Validate(&req); err != nil {
+		h.logger.LogServiceOperation("post_handler", "list_posts", false, time.Since(start).Milliseconds())
+		return response.ValidationError(c, err)
+	}
+
+	posts, err := h.postService.ListPosts(c.Request().Context(), &req)
+	if err != nil {
+		h.logger.LogServiceOperation("post_handler", "list_posts", false, time.Since(start).Milliseconds())
+		return response.InternalServerError(c, "Failed to retrieve posts")
+	}
+
+	h.logger.LogServiceOperation("post_handler", "list_posts", true, time.Since(start).Milliseconds())
+	h.logger.Debug("Listed posts",
+		"page", req.Page,
+		"limit", req.Limit,
+		"total", posts.Pagination.Total,
+		"returned", len(posts.Posts),
+	)
+
+	paginationInfo := response.CreatePaginationInfo(req.Page, req.Limit, int(posts.Pagination.Total))
+
+	return response.SuccessWithPagination(c, posts.Posts, paginationInfo, filters)
+}
+
 // UpdatePost handles PUT /api/v1/posts/:id
 func (h *postHandler) UpdatePost(c echo.Context) error {
 	start := time.Now()
