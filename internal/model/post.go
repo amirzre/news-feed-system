@@ -37,10 +37,10 @@ type UpdatePostParams struct {
 	ImageURL    *string `json:"image_url,omitempty" validate:"omitempty,url,max=1000"`
 }
 
-// BasePostListParams
+// BasePostListParams holds common pagination parameters used by post-listing operations.
 type BasePostListParams struct {
-	Limit  int64 `json:"limit"`
-	Offset int64 `json:"offset"`
+	Limit  int `json:"limit"`
+	Offset int `json:"offset"`
 }
 
 // PostListRequest represents the request parameters for listing posts
@@ -68,20 +68,20 @@ type PaginationMeta struct {
 	HasPrev    bool  `json:"has_prev"`
 }
 
-// ListPostsByCategoryParams
+// ListPostsByCategoryParams contains parameters for querying posts filtered by a specific category.
 type ListPostsByCategoryParams struct {
 	BasePostListParams
-	Category *string `json:"category"`
+	Category string `json:"category"`
 }
 
-// ListPostsBySourceParams
+// ListPostsBySourceParams contains parameters for querying posts filtered by a specific source.
 type ListPostsBySourceParams struct {
 	BasePostListParams
 	Source string `json:"source"`
 }
 
-// SearchPostsParams
+// SearchPostsParams contains parameters for text-based search across posts.
 type SearchPostsParams struct {
 	BasePostListParams
-	Column1 *string `json:"column_1"`
+	Query string `json:"query"`
 }

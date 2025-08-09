@@ -243,8 +243,107 @@ func (r *postRepository) DeletePost(ctx context.Context, id int64) error {
 	return nil
 }
 
-// ListPostByCategory retrieves posts by category
-func (r *postRepository) ListPostByCategory(ctx context.Context, params *model.ListPostsByCategoryParams) (*[]model.Post, error) {
+// ListPosts retrieves posts with pagination
+func (r *postRepository) ListPosts(ctx context.Context, params *model.PostListParams) ([]model.Post, error) {
+	start := time.Now()
+
+	limit := params.Limit
+	offset := (params.Page - 1) * params.Limit
+
+	var posts []model.Post
+	var err error
+
+	switch {
+	case params.Search != nil && *params.Search != "":
+		posts, err = r.SearchPosts(ctx, &model.SearchPostsParams{
+			BasePostListParams: model.BasePostListParams{Limit: limit, Offset: offset},
+			Query:              *params.Search,
+		})
+	case params.Category != nil && *params.Category != "":
+		posts, err = r.ListPostsByCategory(ctx, &model.ListPostsByCategoryParams{
+			BasePostListParams: model.BasePostListParams{Limit: limit, Offset: offset},
+			Category:           *params.Category,
+		})
+	case params.Source != nil && *params.Source != "":
+		posts, err = r.ListPostsBySource(ctx, &model.ListPostsBySourceParams{
+			BasePostListParams: model.BasePostListParams{Limit: limit, Offset: offset},
+			Source:             *params.Source,
+		})
+	default:
+		cacheKey := fmt.Sprintf("posts:list:%d:%d", params.Page, params.Limit)
+		cached, cacheErr := r.redis.Get(ctx, cacheKey).Result()
+		if cacheErr == nil {
+			if err := json.Unmarshal([]byte(cached), &posts); err == nil {
+				r.logger.LogCacheOperation("get", cacheKey, true)
+				return posts, nil
+			}
+		}
+		r.logger.LogCacheOperation("get", cacheKey, false)
+
+		query := `
+			SELECT id, title, description, content, url, source, category, image_url, published_at, created_at, updated_at
+			FROM posts ORDER BY published_at DESC LIMIT $1 OFFSET $2
+		`
+		rows, err := r.db.Query(ctx, query, limit, offset)
+		if err != nil {
+			r.logger.LogDBOperation("list", "posts", time.Since(start).Milliseconds(), err)
+			return nil, fmt.Errorf("Failed to list posts: %w", err)
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var post model.Post
+			var publishedAt sql.NullTime
+
+			err = rows.Scan(
+				&post.ID,
+				&post.Title,
+				&post.Description,
+				&post.Content,
+				&post.URL,
+				&post.Source,
+				&post.Category,
+				&post.ImageURL,
+				&publishedAt,
+				&post.CreatedAt,
+				&post.UpdatedAt,
+			)
+			if err != nil {
+
+				return nil, fmt.Errorf("failed to scan post: %w", err)
+			}
+			if publishedAt.Valid {
+				post.PublishedAt = &publishedAt.Time
+			}
+
+			posts = append(posts, post)
+		}
+
+		if err := rows.Err(); err != nil {
+			r.logger.LogDBOperation("list", "posts", time.Since(start).Milliseconds(), err)
+			return nil, fmt.Errorf("Failed to iterate posts: %w", err)
+		}
+
+		if err == nil {
+			if postsJSON, jsonErr := json.Marshal(posts); jsonErr == nil {
+				r.redis.Set(ctx, cacheKey, postsJSON, r.cacheTTL).Err()
+				r.logger.LogCacheOperation("set", cacheKey, false)
+			}
+		}
+	}
+
+	if err != nil {
+		r.logger.LogDBOperation("list", "posts", time.Since(start).Milliseconds(), err)
+		return nil, fmt.Errorf("Failed to list posts: %w", err)
+	}
+
+	r.logger.LogDBOperation("list", "posts", time.Since(start).Milliseconds(), nil)
+
+	return posts, nil
+}
+
+// ListPostsByCategory retrieves posts by category
+func (r *postRepository) ListPostsByCategory(ctx context.Context, params *model.ListPostsByCategoryParams) ([]model.Post, error) {
 	start := time.Now()
 
 	query := `
@@ -294,11 +393,11 @@ func (r *postRepository) ListPostByCategory(ctx context.Context, params *model.L
 
 	r.logger.LogDBOperation("list_by_category", "posts", time.Since(start).Milliseconds(), nil)
 
-	return &posts, nil
+	return posts, nil
 }
 
 // ListPostsBySource retrieves posts by source
-func (r *postRepository) ListPostsBySource(ctx context.Context, params *model.ListPostsBySourceParams) (*[]model.Post, error) {
+func (r *postRepository) ListPostsBySource(ctx context.Context, params *model.ListPostsBySourceParams) ([]model.Post, error) {
 	start := time.Now()
 
 	query := `
@@ -348,11 +447,11 @@ func (r *postRepository) ListPostsBySource(ctx context.Context, params *model.Li
 
 	r.logger.LogDBOperation("list_by_source", "posts", time.Since(start).Milliseconds(), nil)
 
-	return &posts, nil
+	return posts, nil
 }
 
-// SearchPost searches posts
-func (r *postRepository) SearchPost(ctx context.Context, params *model.SearchPostsParams) (*[]model.Post, error) {
+// SearchPosts searches posts
+func (r *postRepository) SearchPosts(ctx context.Context, params *model.SearchPostsParams) ([]model.Post, error) {
 	start := time.Now()
 
 	query := `
@@ -361,7 +460,7 @@ func (r *postRepository) SearchPost(ctx context.Context, params *model.SearchPos
 		WHERE title ILIKE '%' || $1 || '%' OR description ILIKE '%' || $1 || '%'
 		ORDER BY published_at DESC LIMIT $2 OFFSET $3
 	`
-	rows, err := r.db.Query(ctx, query, params.Column1, params.Limit, params.Offset)
+	rows, err := r.db.Query(ctx, query, params.Query, params.Limit, params.Offset)
 	if err != nil {
 		r.logger.LogDBOperation("search", "posts", time.Since(start).Milliseconds(), err)
 		return nil, fmt.Errorf("Failed to search posts: %w", err)
@@ -404,7 +503,7 @@ func (r *postRepository) SearchPost(ctx context.Context, params *model.SearchPos
 
 	r.logger.LogDBOperation("search", "posts", time.Since(start).Milliseconds(), nil)
 
-	return &posts, nil
+	return posts, nil
 }
 
 // CountPosts counts all posts
