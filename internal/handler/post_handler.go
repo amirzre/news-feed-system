@@ -186,7 +186,7 @@ func (h *postHandler) DeletePost(c echo.Context) error {
 	start := time.Now()
 
 	idParam := c.Param("id")
-	id, err := strconv.ParseInt(idParam, 10, 32)
+	id, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil || id <= 0 {
 		h.logger.LogServiceOperation("post_handler", "delete_post", false, time.Since(start).Milliseconds())
 		return response.BadRequest(c, "Invalid post ID")
