@@ -39,7 +39,7 @@ func (s *postService) CreatePost(ctx context.Context, req *model.CreatePostParam
 	exists, err := s.PostExists(ctx, req.URL)
 	if err != nil {
 		s.logger.LogServiceOperation("post", "create", false, time.Since(start).Milliseconds())
-		return nil, fmt.Errorf("Failed to check post existence: %w", err)
+		return nil, fmt.Errorf("failed to check post existence: %w", err)
 	}
 
 	if exists {
@@ -50,7 +50,7 @@ func (s *postService) CreatePost(ctx context.Context, req *model.CreatePostParam
 	post, err := s.repo.CreatePost(ctx, req)
 	if err != nil {
 		s.logger.LogServiceOperation("post", "create", false, time.Since(start).Milliseconds())
-		return nil, fmt.Errorf("Failed to create post service: %w", err)
+		return nil, fmt.Errorf("failed to create post service: %w", err)
 	}
 
 	s.logger.LogServiceOperation("post", "create", true, time.Since(start).Milliseconds())
@@ -75,7 +75,7 @@ func (s *postService) GetPostByID(ctx context.Context, id int64) (*model.Post, e
 		}
 
 		s.logger.LogServiceOperation("post", "get_by_id", false, time.Since(start).Milliseconds())
-		return nil, fmt.Errorf("Failed to get post: %w", err)
+		return nil, fmt.Errorf("failed to get post: %w", err)
 	}
 
 	s.logger.LogServiceOperation("post", "get_by_id", true, time.Since(start).Milliseconds())
@@ -100,7 +100,7 @@ func (s *postService) ListPosts(ctx context.Context, req *model.PostListParams) 
 	posts, err := s.repo.ListPosts(ctx, req)
 	if err != nil {
 		s.logger.LogServiceOperation("post", "list", false, time.Since(start).Milliseconds())
-		return nil, fmt.Errorf("Failed to list posts: %w", err)
+		return nil, fmt.Errorf("failed to list posts: %w", err)
 	}
 
 	var total int64
@@ -112,7 +112,7 @@ func (s *postService) ListPosts(ctx context.Context, req *model.PostListParams) 
 
 	if err != nil {
 		s.logger.LogServiceOperation("post", "list", false, time.Since(start).Milliseconds())
-		return nil, fmt.Errorf("Failed to count posts: %w", err)
+		return nil, fmt.Errorf("failed to count posts: %w", err)
 	}
 
 	pagination := model.CalculatePagination(req.Page, req.Limit, total)
@@ -144,13 +144,13 @@ func (s *postService) UpdatePost(ctx context.Context, id int64, req *model.Updat
 		}
 
 		s.logger.LogServiceOperation("post", "update", false, time.Since(start).Milliseconds())
-		return nil, fmt.Errorf("Failed to check post existence: %w", err)
+		return nil, fmt.Errorf("failed to check post existence: %w", err)
 	}
 
 	post, err := s.repo.UpdatePost(ctx, id, req)
 	if err != nil {
 		s.logger.LogServiceOperation("post", "update", false, time.Since(start).Milliseconds())
-		return nil, fmt.Errorf("Failed to update post: %w", err)
+		return nil, fmt.Errorf("failed to update post: %w", err)
 	}
 
 	s.logger.LogServiceOperation("post", "update", true, time.Since(start).Milliseconds())
@@ -175,13 +175,13 @@ func (s *postService) DeletePost(ctx context.Context, id int64) error {
 		}
 
 		s.logger.LogServiceOperation("post", "delete", false, time.Since(start).Milliseconds())
-		return fmt.Errorf("Failed to check post existence: %w", err)
+		return fmt.Errorf("failed to check post existence: %w", err)
 	}
 
 	err = s.repo.DeletePost(ctx, id)
 	if err != nil {
 		s.logger.LogServiceOperation("post", "delete", false, time.Since(start).Milliseconds())
-		return fmt.Errorf("Failed to delete post: %w", err)
+		return fmt.Errorf("failed to delete post: %w", err)
 	}
 
 	s.logger.LogServiceOperation("post", "delete", true, time.Since(start).Milliseconds())

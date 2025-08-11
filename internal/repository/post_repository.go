@@ -66,7 +66,7 @@ func (r *postRepository) CreatePost(ctx context.Context, params *model.CreatePos
 
 	if err != nil {
 		r.logger.LogDBOperation("create", "posts", time.Since(time.Now()).Milliseconds(), err)
-		return nil, fmt.Errorf("Failed to create post: %w", err)
+		return nil, fmt.Errorf("failed to create post: %w", err)
 	}
 
 	if publishedAt.Valid {
@@ -105,7 +105,7 @@ func (r *postRepository) GetPostByURL(ctx context.Context, url string) (*model.P
 	)
 	if err != nil {
 		r.logger.LogDBOperation("get_by_url", "posts", time.Since(start).Milliseconds(), err)
-		return nil, fmt.Errorf("Failed to get post by url: %w", err)
+		return nil, fmt.Errorf("failed to get post by url: %w", err)
 	}
 
 	if publishedAt.Valid {
@@ -154,7 +154,7 @@ func (r *postRepository) GetPostByID(ctx context.Context, id int64) (*model.Post
 	)
 	if err != nil {
 		r.logger.LogDBOperation("get_by_id", "posts", time.Since(start).Milliseconds(), err)
-		return nil, fmt.Errorf("Failed to get post by id: %w", err)
+		return nil, fmt.Errorf("failed to get post by id: %w", err)
 	}
 	if publishedAt.Valid {
 		post.PublishedAt = &publishedAt.Time
@@ -204,7 +204,7 @@ func (r *postRepository) UpdatePost(ctx context.Context, id int64, params *model
 	)
 	if err != nil {
 		r.logger.LogDBOperation("update", "posts", time.Since(start).Milliseconds(), err)
-		return nil, fmt.Errorf("Failed to update post: %w", err)
+		return nil, fmt.Errorf("failed to update post: %w", err)
 	}
 
 	if publishedAt.Valid {
@@ -228,11 +228,11 @@ func (r *postRepository) DeletePost(ctx context.Context, id int64) error {
 	post, err := r.db.Exec(ctx, query, id)
 	if err != nil {
 		r.logger.LogDBOperation("delete", "posts", time.Since(start).Milliseconds(), err)
-		return fmt.Errorf("Failed to delete post: %w", err)
+		return fmt.Errorf("failed to delete post: %w", err)
 	}
 
 	if post.RowsAffected() == 0 {
-		return fmt.Errorf("Post with id %d not found", id)
+		return fmt.Errorf("post with id %d not found", id)
 	}
 
 	r.logger.LogDBOperation("delete", "posts", time.Since(start).Milliseconds(), nil)
@@ -287,7 +287,7 @@ func (r *postRepository) ListPosts(ctx context.Context, params *model.PostListPa
 		rows, err := r.db.Query(ctx, query, limit, offset)
 		if err != nil {
 			r.logger.LogDBOperation("list", "posts", time.Since(start).Milliseconds(), err)
-			return nil, fmt.Errorf("Failed to list posts: %w", err)
+			return nil, fmt.Errorf("failed to list posts: %w", err)
 		}
 		defer rows.Close()
 
@@ -321,7 +321,7 @@ func (r *postRepository) ListPosts(ctx context.Context, params *model.PostListPa
 
 		if err := rows.Err(); err != nil {
 			r.logger.LogDBOperation("list", "posts", time.Since(start).Milliseconds(), err)
-			return nil, fmt.Errorf("Failed to iterate posts: %w", err)
+			return nil, fmt.Errorf("failed to iterate posts: %w", err)
 		}
 
 		if err == nil {
@@ -334,7 +334,7 @@ func (r *postRepository) ListPosts(ctx context.Context, params *model.PostListPa
 
 	if err != nil {
 		r.logger.LogDBOperation("list", "posts", time.Since(start).Milliseconds(), err)
-		return nil, fmt.Errorf("Failed to list posts: %w", err)
+		return nil, fmt.Errorf("failed to list posts: %w", err)
 	}
 
 	r.logger.LogDBOperation("list", "posts", time.Since(start).Milliseconds(), nil)
@@ -353,7 +353,7 @@ func (r *postRepository) ListPostsByCategory(ctx context.Context, params *model.
 	rows, err := r.db.Query(ctx, query, params.Category, params.Limit, params.Offset)
 	if err != nil {
 		r.logger.LogDBOperation("list_by_category", "posts", time.Since(start).Milliseconds(), err)
-		return nil, fmt.Errorf("Failed to list posts by category: %w", err)
+		return nil, fmt.Errorf("failed to list posts by category: %w", err)
 	}
 	defer rows.Close()
 
@@ -377,7 +377,7 @@ func (r *postRepository) ListPostsByCategory(ctx context.Context, params *model.
 		)
 		if err != nil {
 			r.logger.LogDBOperation("list_by_category", "posts", time.Since(start).Milliseconds(), err)
-			return nil, fmt.Errorf("Failed to scan post: %w", err)
+			return nil, fmt.Errorf("failed to scan post: %w", err)
 		}
 		if publishedAt.Valid {
 			post.PublishedAt = &publishedAt.Time
@@ -388,7 +388,7 @@ func (r *postRepository) ListPostsByCategory(ctx context.Context, params *model.
 
 	if err := rows.Err(); err != nil {
 		r.logger.LogDBOperation("list_by_category", "posts", time.Since(start).Milliseconds(), err)
-		return nil, fmt.Errorf("Failed to iterate posts by category: %w", err)
+		return nil, fmt.Errorf("failed to iterate posts by category: %w", err)
 	}
 
 	r.logger.LogDBOperation("list_by_category", "posts", time.Since(start).Milliseconds(), nil)
@@ -407,7 +407,7 @@ func (r *postRepository) ListPostsBySource(ctx context.Context, params *model.Li
 	rows, err := r.db.Query(ctx, query, params.Source, params.Limit, params.Offset)
 	if err != nil {
 		r.logger.LogDBOperation("list_by_source", "posts", time.Since(start).Milliseconds(), err)
-		return nil, fmt.Errorf("Failed to list posts by source: %w", err)
+		return nil, fmt.Errorf("failed to list posts by source: %w", err)
 	}
 	defer rows.Close()
 
@@ -431,7 +431,7 @@ func (r *postRepository) ListPostsBySource(ctx context.Context, params *model.Li
 		)
 		if err != nil {
 			r.logger.LogDBOperation("list_by_source", "posts", time.Since(start).Milliseconds(), err)
-			return nil, fmt.Errorf("Failed to scan post: %w", err)
+			return nil, fmt.Errorf("failed to scan post: %w", err)
 		}
 		if publishedAt.Valid {
 			post.PublishedAt = &publishedAt.Time
@@ -442,7 +442,7 @@ func (r *postRepository) ListPostsBySource(ctx context.Context, params *model.Li
 
 	if err := rows.Err(); err != nil {
 		r.logger.LogDBOperation("list_by_source", "posts", time.Since(start).Milliseconds(), err)
-		return nil, fmt.Errorf("Failed to iterate posts by source: %w", err)
+		return nil, fmt.Errorf("failed to iterate posts by source: %w", err)
 	}
 
 	r.logger.LogDBOperation("list_by_source", "posts", time.Since(start).Milliseconds(), nil)
@@ -463,7 +463,7 @@ func (r *postRepository) SearchPosts(ctx context.Context, params *model.SearchPo
 	rows, err := r.db.Query(ctx, query, params.Query, params.Limit, params.Offset)
 	if err != nil {
 		r.logger.LogDBOperation("search", "posts", time.Since(start).Milliseconds(), err)
-		return nil, fmt.Errorf("Failed to search posts: %w", err)
+		return nil, fmt.Errorf("failed to search posts: %w", err)
 	}
 	defer rows.Close()
 
@@ -487,7 +487,7 @@ func (r *postRepository) SearchPosts(ctx context.Context, params *model.SearchPo
 		)
 		if err != nil {
 			r.logger.LogDBOperation("search", "posts", time.Since(start).Milliseconds(), err)
-			return nil, fmt.Errorf("Failed to scan post: %w", err)
+			return nil, fmt.Errorf("failed to scan post: %w", err)
 		}
 		if publishedAt.Valid {
 			post.PublishedAt = &publishedAt.Time
@@ -498,7 +498,7 @@ func (r *postRepository) SearchPosts(ctx context.Context, params *model.SearchPo
 
 	if err := rows.Err(); err != nil {
 		r.logger.LogDBOperation("search", "posts", time.Since(start).Milliseconds(), err)
-		return nil, fmt.Errorf("Failed to iterate search results: %w", err)
+		return nil, fmt.Errorf("failed to iterate search results: %w", err)
 	}
 
 	r.logger.LogDBOperation("search", "posts", time.Since(start).Milliseconds(), nil)
@@ -527,7 +527,7 @@ func (r *postRepository) CountPosts(ctx context.Context) (int64, error) {
 	err = r.db.QueryRow(ctx, query).Scan(&count)
 	if err != nil {
 		r.logger.LogDBOperation("count", "posts", time.Since(start).Milliseconds(), err)
-		return 0, fmt.Errorf("Failed to count posts: %w", err)
+		return 0, fmt.Errorf("failed to count posts: %w", err)
 	}
 
 	r.logger.LogDBOperation("count", "posts", time.Since(start).Milliseconds(), nil)
@@ -550,7 +550,7 @@ func (r *postRepository) CountPostsByCategory(ctx context.Context, category stri
 	err := r.db.QueryRow(ctx, query, category).Scan(&count)
 	if err != nil {
 		r.logger.LogDBOperation("count_by_category", "posts", time.Since(start).Milliseconds(), err)
-		return 0, fmt.Errorf("Failed to count posts by category: %w", err)
+		return 0, fmt.Errorf("failed to count posts by category: %w", err)
 	}
 
 	r.logger.LogDBOperation("count_by_category", "posts", time.Since(start).Milliseconds(), nil)
