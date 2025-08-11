@@ -186,7 +186,7 @@ func (h *postHandler) DeletePost(c echo.Context) error {
 	start := time.Now()
 
 	idParam := c.Param("id")
-	id, err := strconv.ParseInt(idParam, 10, 32)
+	id, err := strconv.ParseInt(idParam, 10, 64)
 	if err != nil || id <= 0 {
 		h.logger.LogServiceOperation("post_handler", "delete_post", false, time.Since(start).Milliseconds())
 		return response.BadRequest(c, "Invalid post ID")
@@ -206,4 +206,131 @@ func (h *postHandler) DeletePost(c echo.Context) error {
 	h.logger.LogServiceOperation("post_handler", "delete_post", true, time.Since(start).Milliseconds())
 
 	return response.Success(c, http.StatusNoContent, nil, "Post deleted successfully")
+}
+
+// GetPostsByCategory handles GET /api/v1/posts/category/:category
+func (h *postHandler) GetPostsByCategory(c echo.Context) error {
+	start := time.Now()
+
+	category := c.Param("category")
+	if category == "" {
+		h.logger.LogServiceOperation("post_handler", "get_posts_by_category", false, time.Since(start).Milliseconds())
+		return response.BadRequest(c, "Category is required")
+	}
+
+	req := model.DefaultPostListParams()
+	req.Category = &category
+
+	if pageParam := c.QueryParam("page"); pageParam != "" {
+		if page, err := strconv.Atoi(pageParam); err == nil && page > 0 {
+			req.Page = page
+		}
+	}
+
+	if limitParam := c.QueryParam("limit"); limitParam != "" {
+		if limit, err := strconv.Atoi(limitParam); err == nil && limit > 0 && limit <= 100 {
+			req.Limit = limit
+		}
+	}
+
+	posts, err := h.postService.ListPosts(c.Request().Context(), &req)
+	if err != nil {
+		h.logger.LogServiceOperation("post_handler", "get_posts_by_category", false, time.Since(start).Milliseconds())
+		return response.InternalServerError(c, "Failed to retrieve posts by category")
+	}
+
+	h.logger.LogServiceOperation("post_handler", "get_posts_by_category", true, time.Since(start).Milliseconds())
+
+	paginationInfo := response.CreatePaginationInfo(req.Page, req.Limit, int(posts.Pagination.Total))
+	filters := map[string]string{"category": category}
+
+	return response.SuccessWithPagination(c, posts.Posts, paginationInfo, filters)
+}
+
+// GetPostsBySource handles GET /api/v1/posts/source/:source
+func (h *postHandler) GetPostsBySource(c echo.Context) error {
+	start := time.Now()
+
+	source := c.Param("source")
+	if source == "" {
+		h.logger.LogServiceOperation("post_handler", "get_posts_by_source", false, time.Since(start).Milliseconds())
+		return response.BadRequest(c, "Source is required")
+	}
+
+	req := model.DefaultPostListParams()
+	req.Source = &source
+
+	if pageParam := c.QueryParam("page"); pageParam != "" {
+		if page, err := strconv.Atoi(pageParam); err == nil && page > 0 {
+			req.Page = page
+		}
+	}
+
+	if limitParam := c.QueryParam("limit"); limitParam != "" {
+		if limit, err := strconv.Atoi(limitParam); err == nil && limit > 0 && limit <= 100 {
+			req.Limit = limit
+		}
+	}
+
+	posts, err := h.postService.ListPosts(c.Request().Context(), &req)
+	if err != nil {
+		h.logger.LogServiceOperation("post_handler", "get_posts_by_source", false, time.Since(start).Milliseconds())
+		return response.InternalServerError(c, "Failed to retrieve posts by source")
+	}
+
+	h.logger.LogServiceOperation("post_handler", "get_posts_by_source", true, time.Since(start).Milliseconds())
+
+	paginationInfo := response.CreatePaginationInfo(req.Page, req.Limit, int(posts.Pagination.Total))
+	filters := map[string]string{"source": source}
+
+	return response.SuccessWithPagination(c, posts.Posts, paginationInfo, filters)
+}
+
+// SearchPosts handles GET /api/v1/posts/search
+func (h *postHandler) SearchPosts(c echo.Context) error {
+	start := time.Now()
+
+	query := c.QueryParam("q")
+	if query == "" {
+		h.logger.LogServiceOperation("post_handler", "search_posts", false, time.Since(start).Milliseconds())
+		return response.BadRequest(c, "Search query parameter 'q' is required")
+	}
+
+	req := model.DefaultPostListParams()
+	req.Search = &query
+
+	if pageParam := c.QueryParam("page"); pageParam != "" {
+		if page, err := strconv.Atoi(pageParam); err == nil && page > 0 {
+			req.Page = page
+		}
+	}
+
+	if limitParam := c.QueryParam("limit"); limitParam != "" {
+		if limit, err := strconv.Atoi(limitParam); err == nil && limit > 0 && limit <= 100 {
+			req.Limit = limit
+		}
+	}
+
+	filters := map[string]string{"search": query}
+	if category := c.QueryParam("category"); category != "" {
+		req.Category = &category
+		filters["category"] = category
+	}
+
+	if source := c.QueryParam("source"); source != "" {
+		req.Source = &source
+		filters["source"] = source
+	}
+
+	posts, err := h.postService.ListPosts(c.Request().Context(), &req)
+	if err != nil {
+		h.logger.LogServiceOperation("post_handler", "search_posts", false, time.Since(start).Milliseconds())
+		return response.InternalServerError(c, "Failed to search posts")
+	}
+
+	h.logger.LogServiceOperation("post_handler", "search_posts", true, time.Since(start).Milliseconds())
+
+	paginationInfo := response.CreatePaginationInfo(req.Page, req.Limit, int(posts.Pagination.Total))
+
+	return response.SuccessWithPagination(c, posts.Posts, paginationInfo, filters)
 }
