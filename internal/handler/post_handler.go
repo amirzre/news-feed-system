@@ -207,3 +207,42 @@ func (h *postHandler) DeletePost(c echo.Context) error {
 
 	return response.Success(c, http.StatusNoContent, nil, "Post deleted successfully")
 }
+
+// GetPostsByCategory handles GET /api/v1/posts/category/:category
+func (h *postHandler) GetPostsByCategory(c echo.Context) error {
+	start := time.Now()
+
+	category := c.Param("category")
+	if category == "" {
+		h.logger.LogServiceOperation("post_handler", "get_posts_by_category", false, time.Since(start).Milliseconds())
+		return response.BadRequest(c, "Category is required")
+	}
+
+	req := model.DefaultPostListParams()
+	req.Category = &category
+
+	if pageParam := c.QueryParam("page"); pageParam != "" {
+		if page, err := strconv.Atoi(pageParam); err == nil && page > 0 {
+			req.Page = page
+		}
+	}
+
+	if limitParam := c.QueryParam("limit"); limitParam != "" {
+		if limit, err := strconv.Atoi(limitParam); err == nil && limit > 0 && limit <= 100 {
+			req.Limit = limit
+		}
+	}
+
+	posts, err := h.postService.ListPosts(c.Request().Context(), &req)
+	if err != nil {
+		h.logger.LogServiceOperation("post_handler", "get_posts_by_category", false, time.Since(start).Milliseconds())
+		return response.InternalServerError(c, "Failed to retrieve posts by category")
+	}
+
+	h.logger.LogServiceOperation("post_handler", "get_posts_by_category", true, time.Since(start).Milliseconds())
+
+	paginationInfo := response.CreatePaginationInfo(req.Page, req.Limit, int(posts.Pagination.Total))
+	filters := map[string]string{"category": category}
+
+	return response.SuccessWithPagination(c, posts.Posts, paginationInfo, filters)
+}
