@@ -1,10 +1,15 @@
 package service
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"time"
 
 	"github.com/amirzre/news-feed-system/internal/config"
+	"github.com/amirzre/news-feed-system/internal/model"
 	"github.com/amirzre/news-feed-system/pkg/logger"
 )
 
@@ -25,5 +30,66 @@ func NewNewsService(cfg *config.Config, logger *logger.Logger) NewsService {
 		apiKey:  cfg.NewsAPI.APIKey,
 		baseURL: cfg.NewsAPI.BaseURL,
 		logger:  logger,
+	}
+}
+
+// makeRequest makes an HTTP request to NewsAPI and handles the response
+func (n *newsService) makeRequest(ctx context.Context, url string) (*model.NewsAPIResponse, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("User-Agent", "news-feed-system/1.0")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := n.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("HTTP request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, n.handleAPIError(resp.StatusCode, body)
+	}
+
+	var newsResponse model.NewsAPIResponse
+	if err := json.Unmarshal(body, &newsResponse); err != nil {
+		return nil, fmt.Errorf("failed to parse JSON response: %w", err)
+	}
+
+	if newsResponse.Status != "ok" {
+		return nil, fmt.Errorf("API returened error status: %s", newsResponse.Status)
+	}
+
+	return &newsResponse, nil
+}
+
+// handleAPIError handles different NewsAPI error responses
+func (n *newsService) handleAPIError(statusCode int, body []byte) error {
+	switch statusCode {
+	case http.StatusUnauthorized:
+		return fmt.Errorf("invalid API key")
+	case http.StatusTooManyRequests:
+		return fmt.Errorf("rate limit exceeded")
+	case http.StatusBadRequest:
+		var errorResp struct {
+			Status  string `json:"status"`
+			Code    string `json:"code"`
+			Message string `json:"message"`
+		}
+		if err := json.Unmarshal(body, &errorResp); err == nil {
+			return fmt.Errorf("API error: %s - %s", errorResp.Code, errorResp.Message)
+		}
+		return fmt.Errorf("bad request")
+	case http.StatusInternalServerError:
+		return fmt.Errorf("NewsAPI server error")
+	default:
+		return fmt.Errorf("unexpected HTTP status: %d", statusCode)
 	}
 }
