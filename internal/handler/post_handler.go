@@ -285,3 +285,52 @@ func (h *postHandler) GetPostsBySource(c echo.Context) error {
 
 	return response.SuccessWithPagination(c, posts.Posts, paginationInfo, filters)
 }
+
+// SearchPosts handles GET /api/v1/posts/search
+func (h *postHandler) SearchPosts(c echo.Context) error {
+	start := time.Now()
+
+	query := c.QueryParam("q")
+	if query == "" {
+		h.logger.LogServiceOperation("post_handler", "search_posts", false, time.Since(start).Milliseconds())
+		return response.BadRequest(c, "Search query parameter 'q' is required")
+	}
+
+	req := model.DefaultPostListParams()
+	req.Search = &query
+
+	if pageParam := c.QueryParam("page"); pageParam != "" {
+		if page, err := strconv.Atoi(pageParam); err == nil && page > 0 {
+			req.Page = page
+		}
+	}
+
+	if limitParam := c.QueryParam("limit"); limitParam != "" {
+		if limit, err := strconv.Atoi(limitParam); err == nil && limit > 0 && limit <= 100 {
+			req.Limit = limit
+		}
+	}
+
+	filters := map[string]string{"search": query}
+	if category := c.QueryParam("category"); category != "" {
+		req.Category = &category
+		filters["category"] = category
+	}
+
+	if source := c.QueryParam("source"); source != "" {
+		req.Source = &source
+		filters["source"] = source
+	}
+
+	posts, err := h.postService.ListPosts(c.Request().Context(), &req)
+	if err != nil {
+		h.logger.LogServiceOperation("post_handler", "search_posts", false, time.Since(start).Milliseconds())
+		return response.InternalServerError(c, "Failed to search posts")
+	}
+
+	h.logger.LogServiceOperation("post_handler", "search_posts", true, time.Since(start).Milliseconds())
+
+	paginationInfo := response.CreatePaginationInfo(req.Page, req.Limit, int(posts.Pagination.Total))
+
+	return response.SuccessWithPagination(c, posts.Posts, paginationInfo, filters)
+}
