@@ -16,4 +16,5 @@ func SetupRoutes(e *echo.Echo, h *Handler) {
 	posts.DELETE("/:id", h.Post.DeletePost)
 
 	posts.GET("/category/:category", h.Post.GetPostsByCategory)
+	posts.GET("/source/:source", h.Post.GetPostsBySource)
 }

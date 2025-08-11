@@ -14,6 +14,7 @@ type PostHandler interface {
 	UpdatePost(c echo.Context) error
 	DeletePost(c echo.Context) error
 	GetPostsByCategory(c echo.Context) error
+	GetPostsBySource(c echo.Context) error
 }
 
 // Handler holds all handler implementations

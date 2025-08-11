@@ -246,3 +246,42 @@ func (h *postHandler) GetPostsByCategory(c echo.Context) error {
 
 	return response.SuccessWithPagination(c, posts.Posts, paginationInfo, filters)
 }
+
+// GetPostsBySource handles GET /api/v1/posts/source/:source
+func (h *postHandler) GetPostsBySource(c echo.Context) error {
+	start := time.Now()
+
+	source := c.Param("source")
+	if source == "" {
+		h.logger.LogServiceOperation("post_handler", "get_posts_by_source", false, time.Since(start).Milliseconds())
+		return response.BadRequest(c, "Source is required")
+	}
+
+	req := model.DefaultPostListParams()
+	req.Source = &source
+
+	if pageParam := c.QueryParam("page"); pageParam != "" {
+		if page, err := strconv.Atoi(pageParam); err == nil && page > 0 {
+			req.Page = page
+		}
+	}
+
+	if limitParam := c.QueryParam("limit"); limitParam != "" {
+		if limit, err := strconv.Atoi(limitParam); err == nil && limit > 0 && limit <= 100 {
+			req.Limit = limit
+		}
+	}
+
+	posts, err := h.postService.ListPosts(c.Request().Context(), &req)
+	if err != nil {
+		h.logger.LogServiceOperation("post_handler", "get_posts_by_source", false, time.Since(start).Milliseconds())
+		return response.InternalServerError(c, "Failed to retrieve posts by source")
+	}
+
+	h.logger.LogServiceOperation("post_handler", "get_posts_by_source", true, time.Since(start).Milliseconds())
+
+	paginationInfo := response.CreatePaginationInfo(req.Page, req.Limit, int(posts.Pagination.Total))
+	filters := map[string]string{"source": source}
+
+	return response.SuccessWithPagination(c, posts.Posts, paginationInfo, filters)
+}
