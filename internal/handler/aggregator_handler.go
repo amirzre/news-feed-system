@@ -27,6 +27,26 @@ func NewAggregatorHandler(aggregatorService service.AggregatorService, logger *l
 	}
 }
 
+// TriggerAggregation handles POST /api/v1/aggregation/trigger
+// This triggers a complete aggregation (all categories and sources)
+func (h *aggregatorHandler) TriggerAggregation(c echo.Context) error {
+	start := time.Now()
+
+	ctx, cancel := context.WithTimeout(c.Request().Context(), 3*time.Minute)
+	defer cancel()
+
+	h.logger.Info("Manual aggregation triggered via API")
+
+	result, err := h.aggregatorService.AggregateAll(ctx)
+	if err != nil {
+		h.logger.LogServiceOperation("aggregator_handler", "trigger_aggregation", false, time.Since(start).Milliseconds())
+		return response.InternalServerError(c, "Aggregation failed", err.Error())
+	}
+
+	h.logger.LogServiceOperation("aggregator_handler", "trigger_aggregation", true, time.Since(start).Milliseconds())
+	return response.Success(c, http.StatusCreated, result, "Aggregation completed successfully")
+}
+
 // TriggerTopHeadlines handles POST /api/v1/aggregation/trigger/headlines
 func (h *aggregatorHandler) TriggerTopHeadlines(c echo.Context) error {
 	start := time.Now()
