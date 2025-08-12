@@ -216,3 +216,32 @@ func (n *newsService) handleAPIError(statusCode int, body []byte) error {
 		return fmt.Errorf("unexpected HTTP status: %d", statusCode)
 	}
 }
+
+// GetDefaultSources returns a list of popular news sources
+func GetDefaultSources() []string {
+	return []string{
+		"bbc-news",
+		"cnn",
+		"reuters",
+		"associated-press",
+		"the-verge",
+		"techcrunch",
+		"ars-technica",
+		"hacker-news",
+		"the-wall-street-journal",
+		"bloomberg",
+	}
+}
+
+// GetDefaultCategories returns a list of news categories
+func GetDefaultCategories() []string {
+	return []string{
+		"general",
+		"business",
+		"entertainment",
+		"health",
+		"science",
+		"sports",
+		"technology",
+	}
+}
