@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 type NewsParams struct {
 	Query    string   `json:"q,omitempty"`
 	Sources  []string `json:"sources,omitempty"`
@@ -30,4 +32,27 @@ type NewsAPIResponse struct {
 	Status       string                 `json:"status"`
 	TotalResults int                    `json:"totalResults"`
 	Articles     []NewsAPIArticleParams `json:"articles"`
+}
+
+// ToPost converts NewsAPIArticle to Post model
+func (article *NewsAPIArticleParams) ToPost() (*CreatePostParams, error) {
+	publishedAt, err := time.Parse(time.RFC3339, article.PublishedAt)
+	if err != nil {
+		publishedAt = time.Time{}
+	}
+
+	post := &CreatePostParams{
+		Title:       article.Title,
+		Description: article.Description,
+		Content:     article.Content,
+		URL:         article.URL,
+		Source:      article.Source.Name,
+		ImageURL:    article.URLToImage,
+	}
+
+	if !publishedAt.IsZero() {
+		post.PublishedAt = &publishedAt
+	}
+
+	return post, nil
 }
