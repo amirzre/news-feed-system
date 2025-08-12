@@ -27,16 +27,25 @@ type NewsService interface {
 	GetNewsBySources(ctx context.Context, sources []string, pageSize int) (*model.NewsAPIResponse, error)
 }
 
+// AggregatorService defines the contract for aggregator business operations
+type AggregatorService interface{}
+
 // Service holds all service implementations
 type Service struct {
-	Post PostService
-	News NewsService
+	Post       PostService
+	News       NewsService
+	Aggregator AggregatorService
 }
 
 // New creates a new service instance with all entity services
 func New(repo *repository.Repository, logger *logger.Logger, cfg *config.Config) *Service {
+	postSvc := NewPostService(repo.Post, logger)
+	newsSvc := NewNewsService(cfg, logger)
+	aggregatorSvc := NewAggregatorService(newsSvc, postSvc, logger)
+
 	return &Service{
-		Post: NewPostService(repo.Post, logger),
-		News: NewNewsService(cfg, logger),
+		Post:       postSvc,
+		News:       newsSvc,
+		Aggregator: aggregatorSvc,
 	}
 }
