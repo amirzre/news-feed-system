@@ -45,7 +45,7 @@ func (s *aggregatorService) AggregateTopHeadlines(ctx context.Context) (*model.A
 		"total_created", result.TotalCreated,
 		"total_duplicates", result.TotalDuplicates,
 		"total_errors", result.TotalErrors,
-		"duration_ms", result.Duration.Milliseconds(),
+		"durationMS", result.Duration.Milliseconds(),
 	)
 
 	return result, nil
@@ -73,6 +73,74 @@ func (s *aggregatorService) AggregateBySources(ctx context.Context, sources []st
 	result.Duration = time.Since(start)
 
 	s.logger.LogServiceOperation("aggregator", "aggregate_by_sources", result.TotalErrors == 0, result.Duration.Milliseconds())
+
+	return result, nil
+}
+
+// AggregateAll performs comprehensive news aggregation
+func (s *aggregatorService) AggregateAll(ctx context.Context) (*model.AggregationResponse, error) {
+	start := time.Now()
+	s.logger.Info("Starting comprehensive news aggregation")
+
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
+	result := &model.AggregationResponse{
+		Categories: make(map[string]model.CategoryStats),
+		Sources:    make(map[string]model.SourceStats),
+		Errors:     []string{},
+	}
+
+	// Aggregate by categories
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		categoryResult := s.aggregateByCategories(ctx, GetDefaultCategories(), true)
+
+		mu.Lock()
+		result.TotalFetched += categoryResult.TotalFetched
+		result.TotalCreated += categoryResult.TotalCreated
+		result.TotalDuplicates += categoryResult.TotalDuplicates
+		result.TotalErrors += categoryResult.TotalErrors
+
+		for k, v := range categoryResult.Categories {
+			result.Categories[k] = v
+		}
+		result.Errors = append(result.Errors, categoryResult.Errors...)
+		mu.Unlock()
+	}()
+
+	// Aggregate by sources
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		sourceResult := s.aggregateBySources(ctx, GetDefaultSources())
+
+		mu.Lock()
+		result.TotalFetched += sourceResult.TotalFetched
+		result.TotalCreated += sourceResult.TotalCreated
+		result.TotalDuplicates += sourceResult.TotalDuplicates
+		result.TotalErrors += sourceResult.TotalErrors
+
+		for k, v := range sourceResult.Sources {
+			result.Sources[k] = v
+		}
+		result.Errors = append(result.Errors, sourceResult.Errors...)
+		mu.Unlock()
+	}()
+
+	wg.Wait()
+
+	result.Duration = time.Since(start)
+	s.logger.LogServiceOperation("aggregator", "aggregate_all", result.TotalErrors == 0, result.Duration.Milliseconds())
+
+	s.logger.Info("Completed comprehensive news aggregation",
+		"total_fetched", result.TotalFetched,
+		"total_created", result.TotalCreated,
+		"total_duplicates", result.TotalDuplicates,
+		"total_errors", result.TotalErrors,
+		"durationMS", result.Duration.Milliseconds(),
+	)
 
 	return result, nil
 }

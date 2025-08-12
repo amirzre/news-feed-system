@@ -33,6 +33,7 @@ type AggregatorService interface {
 	AggregateTopHeadlines(ctx context.Context) (*model.AggregationResponse, error)
 	AggregateByCategories(ctx context.Context, categories []string) (*model.AggregationResponse, error)
 	AggregateBySources(ctx context.Context, sources []string) (*model.AggregationResponse, error)
+	AggregateAll(ctx context.Context) (*model.AggregationResponse, error)
 }
 
 // Service holds all service implementations
