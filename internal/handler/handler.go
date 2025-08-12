@@ -26,10 +26,14 @@ type AggregatorHandler interface {
 	TriggerAggregation(c echo.Context) error
 }
 
+// SchedulerHandler defines the contract for scheduler HTTP handlers
+type SchedulerHandler interface{}
+
 // Handler holds all handler implementations
 type Handler struct {
 	Post       PostHandler
 	Aggregator AggregatorHandler
+	Scheduler  SchedulerHandler
 }
 
 // New creates a new handler instance with all entity handlers
@@ -37,5 +41,6 @@ func New(svc *service.Service, logger *logger.Logger) *Handler {
 	return &Handler{
 		Post:       NewPostHandler(svc.Post, logger),
 		Aggregator: NewAggregatorHandler(svc.Aggregator, logger),
+		Scheduler:  NewSchedulerHandler(svc.Scheduler, logger),
 	}
 }
