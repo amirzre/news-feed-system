@@ -1,5 +1,15 @@
 package model
 
+type NewsParams struct {
+	Query    string   `json:"q,omitempty"`
+	Sources  []string `json:"sources,omitempty"`
+	Category string   `json:"category,omitempty"`
+	Country  string   `json:"country,omitempty"`
+	Language string   `json:"language,omitempty"`
+	PageSize int      `json:"pageSize,omitempty"`
+	Page     int      `json:"page,omitempty"`
+}
+
 // NewsAPIArticleParams represents an article from News API
 type NewsAPIArticleParams struct {
 	Source struct {
