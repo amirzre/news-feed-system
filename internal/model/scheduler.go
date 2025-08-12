@@ -28,3 +28,22 @@ type JobsResponse struct {
 	Count     int                  `json:"count"`
 	Timestamp time.Time            `json:"timestamp"`
 }
+
+// JobTriggerResponse represents the job trigger response
+type JobTriggerResponse struct {
+	JobName   string    `json:"job_name"`
+	Note      string    `json:"note"`
+	NextRun   *time.Time `json:"next_run"`
+	Timestamp time.Time `json:"timestamp"`
+}
+
+// JobNotFoundErrorDetails represents additional info for job not found errors
+type JobNotFoundErrorDetails struct {
+	JobName       string   `json:"job_name"`
+	AvailableJobs []string `json:"available_jobs"`
+}
+
+// JobConflictErrorDetails represents additional info for job conflict errors
+type JobConflictErrorDetails struct {
+	JobName string `json:"job_name"`
+}

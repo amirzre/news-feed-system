@@ -52,3 +52,62 @@ func (h *schedulerHandler) GetJobs(c echo.Context) error {
 
 	return response.Success(c, http.StatusOK, jobsData, "Jobs retrieved successfully")
 }
+
+// TriggerJob handles POST /api/v1/scheduler/jobs/:name/trigger
+func (h *schedulerHandler) TriggerJob(c echo.Context) error {
+	start := time.Now()
+
+	jobName := c.Param("name")
+	if jobName == "" {
+		h.logger.LogServiceOperation("scheduler_handler", "trigger_job", false, time.Since(start).Milliseconds())
+		return response.BadRequest(c, "Job name is required")
+	}
+
+	jobStatus := h.schedulerService.GetJobStatus()
+	job, exists := jobStatus[jobName]
+	if !exists {
+		h.logger.LogServiceOperation("scheduler_handler", "trigger_job", false, time.Since(start).Milliseconds())
+		availableJobs := getJobNames(jobStatus)
+		return response.NotFound(c, "Job not found", "Available jobs: "+joinStrings(availableJobs, ", "))
+	}
+
+	if job.IsRunning {
+		h.logger.LogServiceOperation("scheduler_handler", "trigger_job", false, time.Since(start).Milliseconds())
+		return response.Conflict(c, "Job is already running")
+	}
+
+	h.logger.Info("Manual job trigger requested via API", "job_name", jobName)
+
+	h.logger.LogServiceOperation("scheduler_handler", "trigger_job", true, time.Since(start).Milliseconds())
+
+	triggerData := model.JobTriggerResponse{
+		JobName:   jobName,
+		Note:      "Job will run according to its schedule. For immediate execution, use specific aggregation endpoints.",
+		NextRun:   job.NextRun,
+		Timestamp: time.Now(),
+	}
+
+	return response.Success(c, http.StatusOK, triggerData, "Job trigger acknowledged")
+}
+
+// getJobNames extracts job names from job status map
+func getJobNames(jobStatus map[string]model.JobStatus) []string {
+	names := make([]string, 0, len(jobStatus))
+	for name := range jobStatus {
+		names = append(names, name)
+	}
+	return names
+}
+
+// joinStrings is a helper function to join strings with a separator
+func joinStrings(strings []string, separator string) string {
+	if len(strings) == 0 {
+		return ""
+	}
+
+	result := strings[0]
+	for i := 1; i < len(strings); i++ {
+		result += separator + strings[i]
+	}
+	return result
+}

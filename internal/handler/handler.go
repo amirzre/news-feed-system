@@ -30,6 +30,7 @@ type AggregatorHandler interface {
 type SchedulerHandler interface {
 	GetStatus(c echo.Context) error
 	GetJobs(c echo.Context) error
+	TriggerJob(c echo.Context) error
 }
 
 // Handler holds all handler implementations
