@@ -22,6 +22,7 @@ type PostService interface {
 // NewsService defines the contract for news business operations
 type NewsService interface{
 	GetTopHeadlines(ctx context.Context, params *model.NewsParams) (*model.NewsAPIResponse, error)
+	GetEverything(ctx context.Context, params *model.NewsParams) (*model.NewsAPIResponse, error)
 }
 
 // Service holds all service implementations

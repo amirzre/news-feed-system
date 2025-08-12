@@ -67,12 +67,65 @@ func (n *newsService) GetTopHeadlines(ctx context.Context, params *model.NewsPar
 
 	response, err := n.makeRequest(ctx, fullURL)
 	if err != nil {
-		n.logger.LogServiceOperation("news_client", "get_top_headlines", false, time.Since(start).Milliseconds())
+		n.logger.LogServiceOperation("news_service", "get_top_headlines", false, time.Since(start).Milliseconds())
 		return nil, fmt.Errorf("failed to get top headlines: %w", err)
 	}
 
-	n.logger.LogServiceOperation("news_client", "get_top_headlines", true, time.Since(start).Milliseconds())
+	n.logger.LogServiceOperation("news_service", "get_top_headlines", true, time.Since(start).Milliseconds())
 	n.logger.Debug("Fetched top headlines",
+		"articles_count", len(response.Articles),
+		"total_results", response.TotalResults,
+	)
+
+	return response, nil
+}
+
+// GetEverything fetches all articles matching the criteria
+func (n *newsService) GetEverything(ctx context.Context, params *model.NewsParams) (*model.NewsAPIResponse, error) {
+	start := time.Now()
+
+	endpoint := fmt.Sprintf("%s/everything", n.baseURL)
+
+	param := url.Values{}
+	param.Set("apiKey", n.apiKey)
+
+	if params.Query != "" {
+		param.Set("q", params.Query)
+	}
+	if len(params.Sources) > 0 {
+		sources := ""
+		for i, source := range params.Sources {
+			if i > 0 {
+				sources += ","
+			}
+			sources += source
+		}
+		param.Set("sources", sources)
+	}
+	if params.Language != "" {
+		param.Set("language", params.Language)
+	}
+	if params.PageSize > 0 {
+		param.Set("pageSize", strconv.Itoa(params.PageSize))
+	}
+	if params.Page > 0 {
+		param.Set("page", strconv.Itoa(params.Page))
+	}
+
+	from := time.Now().AddDate(0, 0, -7).Format(time.DateOnly)
+	param.Set("from", from)
+	param.Set("sortBy", "publishedAt")
+
+	fullURL := fmt.Sprintf("%s?%s", endpoint, param.Encode())
+
+	response, err := n.makeRequest(ctx, fullURL)
+	if err != nil {
+		n.logger.LogServiceOperation("news_service", "get_everything", false, time.Since(start).Milliseconds())
+		return nil, fmt.Errorf("failed to get everything: %w", err)
+	}
+
+	n.logger.LogServiceOperation("news_service", "get_everything", true, time.Since(start).Milliseconds())
+	n.logger.Debug("Fetched everything articles",
 		"articles_count", len(response.Articles),
 		"total_results", response.TotalResults,
 	)
