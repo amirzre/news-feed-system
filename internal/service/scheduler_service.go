@@ -36,3 +36,26 @@ func NewSchedulerService(logger *logger.Logger) SchedulerService {
 		logger: logger,
 	}
 }
+
+// Start starts the scheduler service
+func (s *schedulerService) Start(ctx context.Context) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.running {
+		return nil
+	}
+
+	s.ctx, s.cancel = context.WithCancel(ctx)
+	s.running = true
+
+	s.logger.Info("Starting scheduler service")
+
+	for _, job := range s.jobs {
+		s.startJob(job)
+	}
+
+	s.logger.Info("Scheduler service started", "jobs_count", len(s.jobs))
+
+	return nil
+}
