@@ -50,6 +50,19 @@ func (s *aggregatorService) AggregateTopHeadlines(ctx context.Context) (*model.A
 	return result, nil
 }
 
+// AggregateByCategories aggregates news from specific categories
+func (s *aggregatorService) AggregateByCategories(ctx context.Context, categories []string) (*model.AggregationResponse, error) {
+	start := time.Now()
+	s.logger.Info("Starting category-based aggregation", "categories", categories)
+
+	result := s.aggregateByCategories(ctx, categories, true)
+	result.Duration = time.Since(start)
+
+	s.logger.LogServiceOperation("aggregator", "aggregate_by_categories", result.TotalErrors == 0, result.Duration.Milliseconds())
+
+	return result, nil
+}
+
 // aggregateByCategories is the internal implementation for category-based aggregation
 func (s *aggregatorService) aggregateByCategories(ctx context.Context, categories []string, useTopHeadlines bool) *model.AggregationResponse {
 	result := &model.AggregationResponse{

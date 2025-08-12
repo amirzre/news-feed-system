@@ -29,8 +29,9 @@ type NewsService interface {
 }
 
 // AggregatorService defines the contract for aggregator business operations
-type AggregatorService interface{
+type AggregatorService interface {
 	AggregateTopHeadlines(ctx context.Context) (*model.AggregationResponse, error)
+	AggregateByCategories(ctx context.Context, categories []string) (*model.AggregationResponse, error)
 }
 
 // Service holds all service implementations
