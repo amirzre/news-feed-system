@@ -205,3 +205,35 @@ func (s *postService) PostExists(ctx context.Context, url string) (bool, error) 
 
 	return true, nil
 }
+
+// CreatePostFromNewsAPI creates a post from NewsAPI article with duplicate checking
+func (s *postService) CreatePostFromNewsAPI(ctx context.Context, article *model.NewsAPIArticleParams) (*model.Post, error) {
+	start := time.Now()
+
+	req, err := article.ToPost()
+	if err != nil {
+		s.logger.LogServiceOperation("post", "create_from_news_api", false, time.Since(start).Milliseconds())
+		return nil, fmt.Errorf("failed to convert NewsAPI article: %w", err)
+	}
+
+	exists, err := s.PostExists(ctx, req.URL)
+	if err != nil {
+		s.logger.LogServiceOperation("post", "create_from_news_api", false, time.Since(start).Milliseconds())
+		return nil, fmt.Errorf("failed to check post existence: %w", err)
+	}
+
+	if exists {
+		s.logger.Debug("Skipping duplicate post", "url", req.URL)
+		s.logger.LogServiceOperation("post", "create_from_news_api", true, time.Since(start).Milliseconds())
+		return nil, nil
+	}
+
+	post, err := s.CreatePost(ctx, req)
+	if err != nil {
+		s.logger.LogServiceOperation("post", "create_from_news_api", false, time.Since(start).Milliseconds())
+		return nil, fmt.Errorf("failed to create post from NewsAPI: %w", err)
+	}
+
+	s.logger.LogServiceOperation("post", "create_from_news_api", true, time.Since(start).Milliseconds())
+	return post, nil
+}

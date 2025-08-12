@@ -17,6 +17,7 @@ type PostService interface {
 	ListPosts(ctx context.Context, req *model.PostListParams) (*model.PostListResponse, error)
 	UpdatePost(ctx context.Context, id int64, req *model.UpdatePostParams) (*model.Post, error)
 	DeletePost(ctx context.Context, id int64) error
+	CreatePostFromNewsAPI(ctx context.Context, article *model.NewsAPIArticleParams) (*model.Post, error)
 }
 
 // NewsService defines the contract for news business operations
