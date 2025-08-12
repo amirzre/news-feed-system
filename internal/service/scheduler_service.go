@@ -1,0 +1,38 @@
+package service
+
+import (
+	"context"
+	"sync"
+	"time"
+
+	"github.com/amirzre/news-feed-system/internal/model"
+	"github.com/amirzre/news-feed-system/pkg/logger"
+)
+
+type scheduledJob struct {
+	name     string
+	interval time.Duration
+	job      func(context.Context) error
+	ticker   *time.Ticker
+	status   model.JobStatus
+	mu       sync.RWMutex
+}
+
+// schedulerService implements SchedulerService interface
+type schedulerService struct {
+	jobs    map[string]*scheduledJob
+	mu      sync.RWMutex
+	logger  *logger.Logger
+	running bool
+	ctx     context.Context
+	cancel  context.CancelFunc
+	wg      sync.WaitGroup
+}
+
+// NewSchedulerService creates a new scheduler service
+func NewSchedulerService(logger *logger.Logger) SchedulerService {
+	return &schedulerService{
+		jobs:   make(map[string]*scheduledJob),
+		logger: logger,
+	}
+}

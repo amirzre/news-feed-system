@@ -36,11 +36,15 @@ type AggregatorService interface {
 	AggregateAll(ctx context.Context) (*model.AggregationResponse, error)
 }
 
+// SchedulerService defines the contract for scheduler business operations
+type SchedulerService interface{}
+
 // Service holds all service implementations
 type Service struct {
 	Post       PostService
 	News       NewsService
 	Aggregator AggregatorService
+	Scheduler  SchedulerService
 }
 
 // New creates a new service instance with all entity services
@@ -48,10 +52,12 @@ func New(repo *repository.Repository, logger *logger.Logger, cfg *config.Config)
 	postSvc := NewPostService(repo.Post, logger)
 	newsSvc := NewNewsService(cfg, logger)
 	aggregatorSvc := NewAggregatorService(newsSvc, postSvc, logger)
+	schedulerSvc := NewSchedulerService(logger)
 
 	return &Service{
 		Post:       postSvc,
 		News:       newsSvc,
 		Aggregator: aggregatorSvc,
+		Scheduler:  schedulerSvc,
 	}
 }
