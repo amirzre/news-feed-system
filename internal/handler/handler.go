@@ -22,6 +22,7 @@ type PostHandler interface {
 type AggregatorHandler interface {
 	TriggerTopHeadlines(c echo.Context) error
 	TriggerCategoryAggregation(c echo.Context) error
+	TriggerSourceAggregation(c echo.Context) error
 }
 
 // Handler holds all handler implementations

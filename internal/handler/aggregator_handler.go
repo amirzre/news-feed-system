@@ -45,7 +45,7 @@ func (h *aggregatorHandler) TriggerTopHeadlines(c echo.Context) error {
 
 	h.logger.LogServiceOperation("aggregator_handler", "trigger_top_headlines", true, time.Since(start).Milliseconds())
 
-	return response.Success(c, http.StatusOK, result, "Top headlines aggregation completed successfully")
+	return response.Success(c, http.StatusCreated, result, "Top headlines aggregation completed successfully")
 }
 
 // TriggerCategoryAggregation handles POST /api/v1/aggregation/trigger/categories
@@ -97,5 +97,54 @@ func (h *aggregatorHandler) TriggerCategoryAggregation(c echo.Context) error {
 		Result:     result,
 	}
 
-	return response.Success(c, http.StatusOK, responseData, "Category aggregation completed successfully")
+	return response.Success(c, http.StatusCreated, responseData, "Category aggregation completed successfully")
+}
+
+// TriggerSourceAggregation handles POST /api/v1/aggregation/trigger/sources
+func (h *aggregatorHandler) TriggerSourceAggregation(c echo.Context) error {
+	start := time.Now()
+
+	var req model.SourceAggregationRequest
+	if err := c.Bind(&req); err != nil {
+		req.Sources = service.GetDefaultSources()
+	}
+
+	if len(req.Sources) == 0 {
+		req.Sources = service.GetDefaultSources()
+	}
+
+	var filteredSources []string
+	for _, source := range req.Sources {
+		source = strings.TrimSpace(source)
+		if source != "" {
+			filteredSources = append(filteredSources, source)
+		}
+	}
+
+	if len(filteredSources) == 0 {
+		h.logger.LogServiceOperation("aggregator_handler", "trigger_source_aggregation", false, time.Since(start).Milliseconds())
+
+		defaultSources := service.GetDefaultSources()
+		return response.BadRequest(c, "No valid sources provided", "Available sources: "+strings.Join(defaultSources, ", "))
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request().Context(), 3*time.Minute)
+	defer cancel()
+
+	h.logger.Info("Manual source aggregation triggered via API", "sources", filteredSources)
+
+	result, err := h.aggregatorService.AggregateBySources(ctx, filteredSources)
+	if err != nil {
+		h.logger.LogServiceOperation("aggregator_handler", "trigger_source_aggregation", false, time.Since(start).Milliseconds())
+		return response.InternalServerError(c, "Source aggregation failed", err.Error())
+	}
+
+	h.logger.LogServiceOperation("aggregator_handler", "trigger_source_aggregation", true, time.Since(start).Milliseconds())
+
+	responseData := model.SourceAggregationResponse{
+		Sources: filteredSources,
+		Result:  result,
+	}
+
+	return response.Success(c, http.StatusCreated, responseData, "Source aggregation completed successfully")
 }
