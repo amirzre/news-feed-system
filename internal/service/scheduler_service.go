@@ -142,6 +142,21 @@ func (s *schedulerService) RemoveJob(name string) {
 	}
 }
 
+// GetJobStatus returns the status of all jobs
+func (s *schedulerService) GetJobStatus() map[string]model.JobStatus {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	status := make(map[string]model.JobStatus)
+	for name, job := range s.jobs {
+		job.mu.RLock()
+		status[name] = job.status
+		job.mu.RUnlock()
+	}
+
+	return status
+}
+
 // startJob starts a single job
 func (s *schedulerService) startJob(job *scheduledJob) {
 	job.ticker = time.NewTicker(job.interval)
