@@ -39,6 +39,7 @@ type AggregatorService interface {
 // SchedulerService defines the contract for scheduler business operations
 type SchedulerService interface {
 	Start(ctx context.Context) error
+	Stop() error
 }
 
 // Service holds all service implementations

@@ -60,6 +60,31 @@ func (s *schedulerService) Start(ctx context.Context) error {
 	return nil
 }
 
+// Stop stops the scheduler service
+func (s *schedulerService) Stop() error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if !s.running {
+		return nil
+	}
+
+	s.logger.Info("Stopping scheduler service")
+
+	for _, job := range s.jobs {
+		if job.ticker != nil {
+			job.ticker.Stop()
+		}
+	}
+
+	s.cancel()
+	s.wg.Wait()
+
+	s.running = false
+	s.logger.Info("Scheduler service stopped")
+	return nil
+}
+
 // startJob starts a single job
 func (s *schedulerService) startJob(job *scheduledJob) {
 	job.ticker = time.NewTicker(job.interval)
