@@ -36,34 +36,34 @@ func NewNewsService(cfg *config.Config, logger *logger.Logger) NewsService {
 }
 
 // GetTopHeadlines fetches top headlines from NewsAPI
-func (n *newsService) GetTopHeadlines(ctx context.Context, params *model.NewsParams) (*model.NewsAPIResponse, error) {
+func (n *newsService) GetTopHeadlines(ctx context.Context, req *model.NewsParams) (*model.NewsAPIResponse, error) {
 	start := time.Now()
 
 	endpoint := fmt.Sprintf("%s/top-headlines", n.baseURL)
 
-	param := url.Values{}
-	param.Set("apiKey", n.apiKey)
+	params := url.Values{}
+	params.Set("apiKey", n.apiKey)
 
-	if params.Query != "" {
-		param.Set("q", params.Query)
+	if req.Query != "" {
+		params.Set("q", req.Query)
 	}
-	if params.Category != "" {
-		param.Set("category", params.Category)
+	if req.Category != "" {
+		params.Set("category", req.Category)
 	}
-	if params.Country != "" {
-		param.Set("country", params.Country)
+	if req.Country != "" {
+		params.Set("country", req.Country)
 	}
-	if params.Language != "" {
-		param.Set("language", params.Language)
+	if req.Language != "" {
+		params.Set("language", req.Language)
 	}
-	if params.PageSize > 0 {
-		param.Set("pageSize", strconv.Itoa(params.PageSize))
+	if req.PageSize > 0 {
+		params.Set("pageSize", strconv.Itoa(req.PageSize))
 	}
-	if params.Page > 0 {
-		param.Set("page", strconv.Itoa(params.Page))
+	if req.Page > 0 {
+		params.Set("page", strconv.Itoa(req.Page))
 	}
 
-	fullURL := fmt.Sprintf("%s?%s", endpoint, param.Encode())
+	fullURL := fmt.Sprintf("%s?%s", endpoint, params.Encode())
 
 	response, err := n.makeRequest(ctx, fullURL)
 	if err != nil {
@@ -81,42 +81,42 @@ func (n *newsService) GetTopHeadlines(ctx context.Context, params *model.NewsPar
 }
 
 // GetEverything fetches all articles matching the criteria
-func (n *newsService) GetEverything(ctx context.Context, params *model.NewsParams) (*model.NewsAPIResponse, error) {
+func (n *newsService) GetEverything(ctx context.Context, req *model.NewsParams) (*model.NewsAPIResponse, error) {
 	start := time.Now()
 
 	endpoint := fmt.Sprintf("%s/everything", n.baseURL)
 
-	param := url.Values{}
-	param.Set("apiKey", n.apiKey)
+	params := url.Values{}
+	params.Set("apiKey", n.apiKey)
 
-	if params.Query != "" {
-		param.Set("q", params.Query)
+	if req.Query != "" {
+		params.Set("q", req.Query)
 	}
-	if len(params.Sources) > 0 {
+	if len(req.Sources) > 0 {
 		sources := ""
-		for i, source := range params.Sources {
+		for i, source := range req.Sources {
 			if i > 0 {
 				sources += ","
 			}
 			sources += source
 		}
-		param.Set("sources", sources)
+		params.Set("sources", sources)
 	}
-	if params.Language != "" {
-		param.Set("language", params.Language)
+	if req.Language != "" {
+		params.Set("language", req.Language)
 	}
-	if params.PageSize > 0 {
-		param.Set("pageSize", strconv.Itoa(params.PageSize))
+	if req.PageSize > 0 {
+		params.Set("pageSize", strconv.Itoa(req.PageSize))
 	}
-	if params.Page > 0 {
-		param.Set("page", strconv.Itoa(params.Page))
+	if req.Page > 0 {
+		params.Set("page", strconv.Itoa(req.Page))
 	}
 
 	from := time.Now().AddDate(0, 0, -7).Format(time.DateOnly)
-	param.Set("from", from)
-	param.Set("sortBy", "publishedAt")
+	params.Set("from", from)
+	params.Set("sortBy", "publishedAt")
 
-	fullURL := fmt.Sprintf("%s?%s", endpoint, param.Encode())
+	fullURL := fmt.Sprintf("%s?%s", endpoint, params.Encode())
 
 	response, err := n.makeRequest(ctx, fullURL)
 	if err != nil {
