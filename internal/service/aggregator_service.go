@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/amirzre/news-feed-system/internal/model"
 	"github.com/amirzre/news-feed-system/pkg/logger"
@@ -25,6 +26,28 @@ func NewAggregatorService(newsService NewsService, postService PostService, logg
 		logger:      logger,
 		maxWorkers:  5,
 	}
+}
+
+// AggregateTopHeadlines aggregates top headlines from multiple categories
+func (s *aggregatorService) AggregateTopHeadlines(ctx context.Context) (*model.AggregationResponse, error) {
+	start := time.Now()
+	s.logger.Info("Starting top headlines aggregation")
+
+	categories := GetDefaultCategories()
+	result := s.aggregateByCategories(ctx, categories, true)
+
+	result.Duration = time.Since(start)
+	s.logger.LogServiceOperation("aggregator", "aggregate_top_headlines", result.TotalErrors == 0, result.Duration.Milliseconds())
+
+	s.logger.Info("Completed top headlines aggregation",
+		"total_fetched", result.TotalFetched,
+		"total_created", result.TotalCreated,
+		"total_duplicates", result.TotalDuplicates,
+		"total_errors", result.TotalErrors,
+		"duration_ms", result.Duration.Milliseconds(),
+	)
+
+	return result, nil
 }
 
 // aggregateByCategories is the internal implementation for category-based aggregation
