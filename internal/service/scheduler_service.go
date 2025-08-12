@@ -85,6 +85,13 @@ func (s *schedulerService) Stop() error {
 	return nil
 }
 
+// IsRunning returns whether the scheduler is running
+func (s *schedulerService) IsRunning() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.running
+}
+
 // startJob starts a single job
 func (s *schedulerService) startJob(job *scheduledJob) {
 	job.ticker = time.NewTicker(job.interval)

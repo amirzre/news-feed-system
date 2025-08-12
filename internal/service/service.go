@@ -40,6 +40,7 @@ type AggregatorService interface {
 type SchedulerService interface {
 	Start(ctx context.Context) error
 	Stop() error
+	IsRunning() bool
 }
 
 // Service holds all service implementations
