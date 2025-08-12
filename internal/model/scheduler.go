@@ -13,3 +13,11 @@ type JobStatus struct {
 	IsRunning      bool          `json:"is_running"`
 	AverageRunTime time.Duration `json:"average_run_time"`
 }
+
+// SchedulerStatusResponse represents the scheduler status response
+type SchedulerStatusResponse struct {
+	SchedulerRunning bool                 `json:"scheduler_running"`
+	JobsCount        int                  `json:"jobs_count"`
+	Timestamp        time.Time            `json:"timestamp"`
+	Jobs             map[string]JobStatus `json:"jobs"`
+}

@@ -27,7 +27,9 @@ type AggregatorHandler interface {
 }
 
 // SchedulerHandler defines the contract for scheduler HTTP handlers
-type SchedulerHandler interface{}
+type SchedulerHandler interface {
+	GetStatus(c echo.Context) error
+}
 
 // Handler holds all handler implementations
 type Handler struct {
