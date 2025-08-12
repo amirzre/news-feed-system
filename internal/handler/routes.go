@@ -18,4 +18,8 @@ func SetupRoutes(e *echo.Echo, h *Handler) {
 	posts.GET("/category/:category", h.Post.GetPostsByCategory)
 	posts.GET("/source/:source", h.Post.GetPostsBySource)
 	posts.GET("/search", h.Post.SearchPosts)
+
+	// Aggregation routes
+	aggregation := api.Group("/aggregation")
+	aggregation.POST("/trigger/headlines", h.Aggregator.TriggerTopHeadlines)
 }
