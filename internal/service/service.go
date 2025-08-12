@@ -20,7 +20,9 @@ type PostService interface {
 }
 
 // NewsService defines the contract for news business operations
-type NewsService interface{}
+type NewsService interface{
+	GetTopHeadlines(ctx context.Context, params *model.NewsParams) (*model.NewsAPIResponse, error)
+}
 
 // Service holds all service implementations
 type Service struct {

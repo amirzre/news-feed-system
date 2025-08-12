@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/amirzre/news-feed-system/internal/config"
@@ -31,6 +33,51 @@ func NewNewsService(cfg *config.Config, logger *logger.Logger) NewsService {
 		baseURL: cfg.NewsAPI.BaseURL,
 		logger:  logger,
 	}
+}
+
+// GetTopHeadlines fetches top headlines from NewsAPI
+func (n *newsService) GetTopHeadlines(ctx context.Context, params *model.NewsParams) (*model.NewsAPIResponse, error) {
+	start := time.Now()
+
+	endpoint := fmt.Sprintf("%s/top-headlines", n.baseURL)
+
+	param := url.Values{}
+	param.Set("apiKey", n.apiKey)
+
+	if params.Query != "" {
+		param.Set("q", params.Query)
+	}
+	if params.Category != "" {
+		param.Set("category", params.Category)
+	}
+	if params.Country != "" {
+		param.Set("country", params.Country)
+	}
+	if params.Language != "" {
+		param.Set("language", params.Language)
+	}
+	if params.PageSize > 0 {
+		param.Set("pageSize", strconv.Itoa(params.PageSize))
+	}
+	if params.Page > 0 {
+		param.Set("page", strconv.Itoa(params.Page))
+	}
+
+	fullURL := fmt.Sprintf("%s?%s", endpoint, param.Encode())
+
+	response, err := n.makeRequest(ctx, fullURL)
+	if err != nil {
+		n.logger.LogServiceOperation("news_client", "get_top_headlines", false, time.Since(start).Milliseconds())
+		return nil, fmt.Errorf("failed to get top headlines: %w", err)
+	}
+
+	n.logger.LogServiceOperation("news_client", "get_top_headlines", true, time.Since(start).Milliseconds())
+	n.logger.Debug("Fetched top headlines",
+		"articles_count", len(response.Articles),
+		"total_results", response.TotalResults,
+	)
+
+	return response, nil
 }
 
 // makeRequest makes an HTTP request to NewsAPI and handles the response
