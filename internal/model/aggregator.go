@@ -29,3 +29,14 @@ type CategoryStats struct {
 type SourceStats struct {
 	BaseStats
 }
+
+// CategoryAggregationRequest represents the request body for category aggregation
+type CategoryAggregationRequest struct {
+	Categories []string `json:"categories,omitempty"`
+}
+
+// CategoryAggregationResponse represents the response for category aggregation
+type CategoryAggregationResponse struct {
+	Categories []string `json:"categories"`
+	Result     any      `json:"result"`
+}
