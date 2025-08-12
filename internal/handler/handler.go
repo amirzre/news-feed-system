@@ -21,6 +21,7 @@ type PostHandler interface {
 // AggregatorHandler defines the contract for aggregator HTTP handlers
 type AggregatorHandler interface {
 	TriggerTopHeadlines(c echo.Context) error
+	TriggerCategoryAggregation(c echo.Context) error
 }
 
 // Handler holds all handler implementations
