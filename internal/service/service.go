@@ -24,6 +24,7 @@ type NewsService interface {
 	GetTopHeadlines(ctx context.Context, params *model.NewsParams) (*model.NewsAPIResponse, error)
 	GetEverything(ctx context.Context, params *model.NewsParams) (*model.NewsAPIResponse, error)
 	GetNewsByCategory(ctx context.Context, category string, pageSize int) (*model.NewsAPIResponse, error)
+	GetNewsBySources(ctx context.Context, sources []string, pageSize int) (*model.NewsAPIResponse, error)
 }
 
 // Service holds all service implementations
