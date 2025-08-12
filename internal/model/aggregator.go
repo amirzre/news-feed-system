@@ -40,3 +40,14 @@ type CategoryAggregationResponse struct {
 	Categories []string `json:"categories"`
 	Result     any      `json:"result"`
 }
+
+// SourceAggregationRequest represents the request body for source aggregation
+type SourceAggregationRequest struct {
+	Sources []string `json:"sources,omitempty"`
+}
+
+// SourceAggregationResponse represents the response for source aggregation
+type SourceAggregationResponse struct {
+	Sources []string `json:"sources"`
+	Result  any      `json:"result"`
+}
