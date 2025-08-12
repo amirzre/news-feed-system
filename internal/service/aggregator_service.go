@@ -64,6 +64,19 @@ func (s *aggregatorService) AggregateByCategories(ctx context.Context, categorie
 	return result, nil
 }
 
+// AggregateBySources aggregates news from specific sources
+func (s *aggregatorService) AggregateBySources(ctx context.Context, sources []string) (*model.AggregationResponse, error) {
+	start := time.Now()
+	s.logger.Info("Starting source-based aggregation", "sources", sources)
+
+	result := s.aggregateBySources(ctx, sources)
+	result.Duration = time.Since(start)
+
+	s.logger.LogServiceOperation("aggregator", "aggregate_by_sources", result.TotalErrors == 0, result.Duration.Milliseconds())
+
+	return result, nil
+}
+
 // aggregateByCategories is the internal implementation for category-based aggregation
 func (s *aggregatorService) aggregateByCategories(ctx context.Context, categories []string, useTopHeadlines bool) *model.AggregationResponse {
 	result := &model.AggregationResponse{
