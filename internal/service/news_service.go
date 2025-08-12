@@ -133,6 +133,18 @@ func (n *newsService) GetEverything(ctx context.Context, params *model.NewsParam
 	return response, nil
 }
 
+// GetNewsByCategory fetches news by category
+func (n *newsService) GetNewsByCategory(ctx context.Context, category string, pageSize int) (*model.NewsAPIResponse, error) {
+	params := &model.NewsParams{
+		Category: category,
+		Country:  "us",
+		Language: "en",
+		PageSize: pageSize,
+	}
+
+	return n.GetTopHeadlines(ctx, params)
+}
+
 // makeRequest makes an HTTP request to NewsAPI and handles the response
 func (n *newsService) makeRequest(ctx context.Context, url string) (*model.NewsAPIResponse, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
