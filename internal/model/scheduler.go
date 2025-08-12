@@ -21,3 +21,10 @@ type SchedulerStatusResponse struct {
 	Timestamp        time.Time            `json:"timestamp"`
 	Jobs             map[string]JobStatus `json:"jobs"`
 }
+
+// JobsResponse represents the jobs listing response
+type JobsResponse struct {
+	Jobs      map[string]JobStatus `json:"jobs"`
+	Count     int                  `json:"count"`
+	Timestamp time.Time            `json:"timestamp"`
+}

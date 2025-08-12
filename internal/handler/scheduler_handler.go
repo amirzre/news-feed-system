@@ -39,3 +39,16 @@ func (h *schedulerHandler) GetStatus(c echo.Context) error {
 
 	return response.Success(c, http.StatusOK, statusData, "Scheduler status retrieved successfully")
 }
+
+// GetJobs handles GET /api/v1/scheduler/jobs
+func (h *schedulerHandler) GetJobs(c echo.Context) error {
+	jobStatus := h.schedulerService.GetJobStatus()
+
+	jobsData := model.JobsResponse{
+		Jobs:      jobStatus,
+		Count:     len(jobStatus),
+		Timestamp: time.Now(),
+	}
+
+	return response.Success(c, http.StatusOK, jobsData, "Jobs retrieved successfully")
+}

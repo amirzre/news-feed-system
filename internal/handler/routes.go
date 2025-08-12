@@ -29,4 +29,5 @@ func SetupRoutes(e *echo.Echo, h *Handler) {
 	// Scheduler routes
 	scheduler := api.Group("/scheduler")
 	scheduler.GET("/status", h.Scheduler.GetStatus)
+	scheduler.GET("/jobs", h.Scheduler.GetJobs)
 }
