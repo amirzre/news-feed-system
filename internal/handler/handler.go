@@ -19,7 +19,9 @@ type PostHandler interface {
 }
 
 // AggregatorHandler defines the contract for aggregator HTTP handlers
-type AggregatorHandler interface{}
+type AggregatorHandler interface {
+	TriggerTopHeadlines(c echo.Context) error
+}
 
 // Handler holds all handler implementations
 type Handler struct {
