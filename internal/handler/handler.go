@@ -18,14 +18,24 @@ type PostHandler interface {
 	SearchPosts(c echo.Context) error
 }
 
+// AggregatorHandler defines the contract for aggregator HTTP handlers
+type AggregatorHandler interface {
+	TriggerTopHeadlines(c echo.Context) error
+	TriggerCategoryAggregation(c echo.Context) error
+	TriggerSourceAggregation(c echo.Context) error
+	TriggerAggregation(c echo.Context) error
+}
+
 // Handler holds all handler implementations
 type Handler struct {
-	Post PostHandler
+	Post       PostHandler
+	Aggregator AggregatorHandler
 }
 
 // New creates a new handler instance with all entity handlers
 func New(svc *service.Service, logger *logger.Logger) *Handler {
 	return &Handler{
-		Post: NewPostHandler(svc.Post, logger),
+		Post:       NewPostHandler(svc.Post, logger),
+		Aggregator: NewAggregatorHandler(svc.Aggregator, logger),
 	}
 }

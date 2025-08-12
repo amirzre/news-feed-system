@@ -17,6 +17,7 @@ type PostService interface {
 	ListPosts(ctx context.Context, req *model.PostListParams) (*model.PostListResponse, error)
 	UpdatePost(ctx context.Context, id int64, req *model.UpdatePostParams) (*model.Post, error)
 	DeletePost(ctx context.Context, id int64) error
+	CreatePostFromNewsAPI(ctx context.Context, article *model.NewsAPIArticleParams) (*model.Post, error)
 }
 
 // NewsService defines the contract for news business operations
@@ -27,16 +28,30 @@ type NewsService interface {
 	GetNewsBySources(ctx context.Context, sources []string, pageSize int) (*model.NewsAPIResponse, error)
 }
 
+// AggregatorService defines the contract for aggregator business operations
+type AggregatorService interface {
+	AggregateTopHeadlines(ctx context.Context) (*model.AggregationResponse, error)
+	AggregateByCategories(ctx context.Context, categories []string) (*model.AggregationResponse, error)
+	AggregateBySources(ctx context.Context, sources []string) (*model.AggregationResponse, error)
+	AggregateAll(ctx context.Context) (*model.AggregationResponse, error)
+}
+
 // Service holds all service implementations
 type Service struct {
-	Post PostService
-	News NewsService
+	Post       PostService
+	News       NewsService
+	Aggregator AggregatorService
 }
 
 // New creates a new service instance with all entity services
 func New(repo *repository.Repository, logger *logger.Logger, cfg *config.Config) *Service {
+	postSvc := NewPostService(repo.Post, logger)
+	newsSvc := NewNewsService(cfg, logger)
+	aggregatorSvc := NewAggregatorService(newsSvc, postSvc, logger)
+
 	return &Service{
-		Post: NewPostService(repo.Post, logger),
-		News: NewNewsService(cfg, logger),
+		Post:       postSvc,
+		News:       newsSvc,
+		Aggregator: aggregatorSvc,
 	}
 }

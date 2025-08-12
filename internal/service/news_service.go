@@ -36,13 +36,13 @@ func NewNewsService(cfg *config.Config, logger *logger.Logger) NewsService {
 }
 
 // GetTopHeadlines fetches top headlines from NewsAPI
-func (n *newsService) GetTopHeadlines(ctx context.Context, req *model.NewsParams) (*model.NewsAPIResponse, error) {
+func (s *newsService) GetTopHeadlines(ctx context.Context, req *model.NewsParams) (*model.NewsAPIResponse, error) {
 	start := time.Now()
 
-	endpoint := fmt.Sprintf("%s/top-headlines", n.baseURL)
+	endpoint := fmt.Sprintf("%s/top-headlines", s.baseURL)
 
 	params := url.Values{}
-	params.Set("apiKey", n.apiKey)
+	params.Set("apiKey", s.apiKey)
 
 	if req.Query != "" {
 		params.Set("q", req.Query)
@@ -65,14 +65,14 @@ func (n *newsService) GetTopHeadlines(ctx context.Context, req *model.NewsParams
 
 	fullURL := fmt.Sprintf("%s?%s", endpoint, params.Encode())
 
-	response, err := n.makeRequest(ctx, fullURL)
+	response, err := s.makeRequest(ctx, fullURL)
 	if err != nil {
-		n.logger.LogServiceOperation("news_service", "get_top_headlines", false, time.Since(start).Milliseconds())
+		s.logger.LogServiceOperation("news_service", "get_top_headlines", false, time.Since(start).Milliseconds())
 		return nil, fmt.Errorf("failed to get top headlines: %w", err)
 	}
 
-	n.logger.LogServiceOperation("news_service", "get_top_headlines", true, time.Since(start).Milliseconds())
-	n.logger.Debug("Fetched top headlines",
+	s.logger.LogServiceOperation("news_service", "get_top_headlines", true, time.Since(start).Milliseconds())
+	s.logger.Debug("Fetched top headlines",
 		"articles_count", len(response.Articles),
 		"total_results", response.TotalResults,
 	)
@@ -81,13 +81,13 @@ func (n *newsService) GetTopHeadlines(ctx context.Context, req *model.NewsParams
 }
 
 // GetEverything fetches all articles matching the criteria
-func (n *newsService) GetEverything(ctx context.Context, req *model.NewsParams) (*model.NewsAPIResponse, error) {
+func (s *newsService) GetEverything(ctx context.Context, req *model.NewsParams) (*model.NewsAPIResponse, error) {
 	start := time.Now()
 
-	endpoint := fmt.Sprintf("%s/everything", n.baseURL)
+	endpoint := fmt.Sprintf("%s/everything", s.baseURL)
 
 	params := url.Values{}
-	params.Set("apiKey", n.apiKey)
+	params.Set("apiKey", s.apiKey)
 
 	if req.Query != "" {
 		params.Set("q", req.Query)
@@ -118,14 +118,14 @@ func (n *newsService) GetEverything(ctx context.Context, req *model.NewsParams) 
 
 	fullURL := fmt.Sprintf("%s?%s", endpoint, params.Encode())
 
-	response, err := n.makeRequest(ctx, fullURL)
+	response, err := s.makeRequest(ctx, fullURL)
 	if err != nil {
-		n.logger.LogServiceOperation("news_service", "get_everything", false, time.Since(start).Milliseconds())
+		s.logger.LogServiceOperation("news_service", "get_everything", false, time.Since(start).Milliseconds())
 		return nil, fmt.Errorf("failed to get everything: %w", err)
 	}
 
-	n.logger.LogServiceOperation("news_service", "get_everything", true, time.Since(start).Milliseconds())
-	n.logger.Debug("Fetched everything articles",
+	s.logger.LogServiceOperation("news_service", "get_everything", true, time.Since(start).Milliseconds())
+	s.logger.Debug("Fetched everything articles",
 		"articles_count", len(response.Articles),
 		"total_results", response.TotalResults,
 	)
@@ -134,7 +134,7 @@ func (n *newsService) GetEverything(ctx context.Context, req *model.NewsParams) 
 }
 
 // GetNewsByCategory fetches news by category
-func (n *newsService) GetNewsByCategory(ctx context.Context, category string, pageSize int) (*model.NewsAPIResponse, error) {
+func (s *newsService) GetNewsByCategory(ctx context.Context, category string, pageSize int) (*model.NewsAPIResponse, error) {
 	params := &model.NewsParams{
 		Category: category,
 		Country:  "us",
@@ -142,22 +142,22 @@ func (n *newsService) GetNewsByCategory(ctx context.Context, category string, pa
 		PageSize: pageSize,
 	}
 
-	return n.GetTopHeadlines(ctx, params)
+	return s.GetTopHeadlines(ctx, params)
 }
 
 // GetNewsBySources fetches news from specific sources
-func (n *newsService) GetNewsBySources(ctx context.Context, sources []string, pageSize int) (*model.NewsAPIResponse, error) {
+func (s *newsService) GetNewsBySources(ctx context.Context, sources []string, pageSize int) (*model.NewsAPIResponse, error) {
 	params := &model.NewsParams{
 		Sources:  sources,
 		Language: "en",
 		PageSize: pageSize,
 	}
 
-	return n.GetEverything(ctx, params)
+	return s.GetEverything(ctx, params)
 }
 
 // makeRequest makes an HTTP request to NewsAPI and handles the response
-func (n *newsService) makeRequest(ctx context.Context, url string) (*model.NewsAPIResponse, error) {
+func (s *newsService) makeRequest(ctx context.Context, url string) (*model.NewsAPIResponse, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
@@ -166,7 +166,7 @@ func (n *newsService) makeRequest(ctx context.Context, url string) (*model.NewsA
 	req.Header.Set("User-Agent", "news-feed-system/1.0")
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := n.httpClient.Do(req)
+	resp, err := s.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("HTTP request failed: %w", err)
 	}
@@ -178,7 +178,7 @@ func (n *newsService) makeRequest(ctx context.Context, url string) (*model.NewsA
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, n.handleAPIError(resp.StatusCode, body)
+		return nil, s.handleAPIError(resp.StatusCode, body)
 	}
 
 	var newsResponse model.NewsAPIResponse
@@ -194,7 +194,7 @@ func (n *newsService) makeRequest(ctx context.Context, url string) (*model.NewsA
 }
 
 // handleAPIError handles different NewsAPI error responses
-func (n *newsService) handleAPIError(statusCode int, body []byte) error {
+func (s *newsService) handleAPIError(statusCode int, body []byte) error {
 	switch statusCode {
 	case http.StatusUnauthorized:
 		return fmt.Errorf("invalid API key")
