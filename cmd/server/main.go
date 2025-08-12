@@ -64,7 +64,7 @@ func main() {
 
 	// Initialize repository and service layer
 	repo := repository.New(db.PG, db.Redis, log, cfg.Cache.TTL)
-	svc := service.New(repo, log)
+	svc := service.New(repo, log, cfg)
 	h := handler.New(svc, log)
 
 	// Setup routes

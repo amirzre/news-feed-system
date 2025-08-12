@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/amirzre/news-feed-system/internal/config"
 	"github.com/amirzre/news-feed-system/internal/model"
 	"github.com/amirzre/news-feed-system/internal/repository"
 	"github.com/amirzre/news-feed-system/pkg/logger"
@@ -18,14 +19,24 @@ type PostService interface {
 	DeletePost(ctx context.Context, id int64) error
 }
 
+// NewsService defines the contract for news business operations
+type NewsService interface {
+	GetTopHeadlines(ctx context.Context, req *model.NewsParams) (*model.NewsAPIResponse, error)
+	GetEverything(ctx context.Context, req *model.NewsParams) (*model.NewsAPIResponse, error)
+	GetNewsByCategory(ctx context.Context, category string, pageSize int) (*model.NewsAPIResponse, error)
+	GetNewsBySources(ctx context.Context, sources []string, pageSize int) (*model.NewsAPIResponse, error)
+}
+
 // Service holds all service implementations
 type Service struct {
 	Post PostService
+	News NewsService
 }
 
 // New creates a new service instance with all entity services
-func New(repo *repository.Repository, logger *logger.Logger) *Service {
+func New(repo *repository.Repository, logger *logger.Logger, cfg *config.Config) *Service {
 	return &Service{
 		Post: NewPostService(repo.Post, logger),
+		News: NewNewsService(cfg, logger),
 	}
 }
