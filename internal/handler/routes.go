@@ -21,6 +21,7 @@ func SetupRoutes(e *echo.Echo, h *Handler) {
 
 	// Aggregation routes
 	aggregation := api.Group("/aggregation")
+	aggregation.POST("/trigger", h.Aggregator.TriggerAggregation)
 	aggregation.POST("/trigger/headlines", h.Aggregator.TriggerTopHeadlines)
 	aggregation.POST("/trigger/categories", h.Aggregator.TriggerCategoryAggregation)
 	aggregation.POST("/trigger/sources", h.Aggregator.TriggerSourceAggregation)
