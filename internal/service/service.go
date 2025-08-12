@@ -43,6 +43,7 @@ type SchedulerService interface {
 	Stop() error
 	IsRunning() bool
 	AddJob(name string, interval time.Duration, job func(context.Context) error)
+	RemoveJob(name string)
 }
 
 // Service holds all service implementations

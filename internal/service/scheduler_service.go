@@ -128,6 +128,20 @@ func (s *schedulerService) AddJob(name string, interval time.Duration, job func(
 	)
 }
 
+// RemoveJob removes a scheduled job
+func (s *schedulerService) RemoveJob(name string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if job, exists := s.jobs[name]; exists {
+		if job.ticker != nil {
+			job.ticker.Stop()
+		}
+		delete(s.jobs, name)
+		s.logger.Info("Removed scheduled job", "name", name)
+	}
+}
+
 // startJob starts a single job
 func (s *schedulerService) startJob(job *scheduledJob) {
 	job.ticker = time.NewTicker(job.interval)
