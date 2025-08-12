@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"github.com/amirzre/news-feed-system/internal/config"
 	"github.com/amirzre/news-feed-system/internal/model"
@@ -41,6 +42,7 @@ type SchedulerService interface {
 	Start(ctx context.Context) error
 	Stop() error
 	IsRunning() bool
+	AddJob(name string, interval time.Duration, job func(context.Context) error)
 }
 
 // Service holds all service implementations

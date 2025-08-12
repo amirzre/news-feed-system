@@ -92,6 +92,42 @@ func (s *schedulerService) IsRunning() bool {
 	return s.running
 }
 
+// AddJob adds a new scheduled job
+func (s *schedulerService) AddJob(name string, interval time.Duration, job func(context.Context) error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// Stop existing job if it exists
+	if existingJob, exists := s.jobs[name]; exists {
+		if existingJob.ticker != nil {
+			existingJob.ticker.Stop()
+		}
+	}
+
+	// Create new job
+	scheduledJob := &scheduledJob{
+		name:     name,
+		interval: interval,
+		job:      job,
+		status: model.JobStatus{
+			Name:     name,
+			Interval: interval,
+		},
+	}
+
+	s.jobs[name] = scheduledJob
+
+	// Start the job if scheduler is running
+	if s.running {
+		s.startJob(scheduledJob)
+	}
+
+	s.logger.Info("Added scheduled job",
+		"name", name,
+		"interval", interval.String(),
+	)
+}
+
 // startJob starts a single job
 func (s *schedulerService) startJob(job *scheduledJob) {
 	job.ticker = time.NewTicker(job.interval)
