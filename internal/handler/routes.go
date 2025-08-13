@@ -1,9 +1,15 @@
 package handler
 
-import "github.com/labstack/echo/v4"
+import (
+	"github.com/labstack/echo/v4"
+	echoSwagger "github.com/swaggo/echo-swagger"
+)
 
 // SetupRoutes configures all API routes
 func SetupRoutes(e *echo.Echo, h *Handler) {
+	// Swagger UI
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
+
 	// API v1 routes
 	api := e.Group("/api/v1")
 
