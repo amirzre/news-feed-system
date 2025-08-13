@@ -1,25 +1,23 @@
 package model
 
-import (
-	"time"
-)
+import "time"
 
 type AggregationResponse struct {
-	TotalFetched    int                      `json:"total_fetched"`
-	TotalCreated    int                      `json:"total_created"`
-	TotalDuplicates int                      `json:"total_duplicates"`
-	TotalErrors     int                      `json:"total_errors"`
-	Duration        time.Duration            `json:"duration"`
+	TotalFetched    int                      `json:"total_fetched" example:"150"`
+	TotalCreated    int                      `json:"total_created" example:"120"`
+	TotalDuplicates int                      `json:"total_duplicates" example:"25"`
+	TotalErrors     int                      `json:"total_errors" example:"5"`
+	Duration        time.Duration            `json:"duration" swaggertype:"string" example:"1s"`
 	Categories      map[string]CategoryStats `json:"categories,omitempty"`
 	Sources         map[string]SourceStats   `json:"sources,omitempty"`
-	Errors          []string                 `json:"errors,omitempty"`
+	Errors          []string                 `json:"errors,omitempty" example:"[]"`
 }
 
 type BaseStats struct {
-	Fetched    int `json:"fetched"`
-	Created    int `json:"created"`
-	Duplicates int `json:"duplicates"`
-	Errors     int `json:"errors"`
+	Fetched    int `json:"fetched" example:"100"`
+	Created    int `json:"created" example:"80"`
+	Duplicates int `json:"duplicates" example:"15"`
+	Errors     int `json:"errors" example:"2"`
 }
 
 type CategoryStats struct {
@@ -32,22 +30,22 @@ type SourceStats struct {
 
 // CategoryAggregationRequest represents the request body for category aggregation
 type CategoryAggregationRequest struct {
-	Categories []string `json:"categories,omitempty"`
+	Categories []string `json:"categories,omitempty" example:"[\"technology\",\"business\"]"`
 }
 
 // CategoryAggregationResponse represents the response for category aggregation
 type CategoryAggregationResponse struct {
-	Categories []string `json:"categories"`
-	Result     any      `json:"result"`
+	Categories []string            `json:"categories" example:"[\"technology\"]"`
+	Result     AggregationResponse `json:"result"`
 }
 
 // SourceAggregationRequest represents the request body for source aggregation
 type SourceAggregationRequest struct {
-	Sources []string `json:"sources,omitempty"`
+	Sources []string `json:"sources,omitempty" example:"[\"techcrunch\",\"wired\"]"`
 }
 
 // SourceAggregationResponse represents the response for source aggregation
 type SourceAggregationResponse struct {
-	Sources []string `json:"sources"`
-	Result  any      `json:"result"`
+	Sources []string            `json:"sources" example:"[\"techcrunch\"]"`
+	Result  AggregationResponse `json:"result"`
 }

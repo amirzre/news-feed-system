@@ -8,16 +8,16 @@ import (
 
 // APIResponse represents the standard API response structure
 type APIResponse struct {
-	Success bool       `json:"success"`
+	Success bool       `json:"success" example:"true"`
 	Data    any        `json:"data,omitempty"`
-	Message string     `json:"message,omitempty"`
+	Message string     `json:"message,omitempty" example:"Operation successful"`
 	Error   *ErrorInfo `json:"error,omitempty"`
 }
 
 // ErrorInfo contains detailed error information
 type ErrorInfo struct {
-	Message string `json:"message"`
-	Details string `json:"details,omitempty"`
+	Message string `json:"message" example:"Validation failed"`
+	Details string `json:"details,omitempty" example:"title is required"`
 }
 
 // PaginatedResponse wraps paginated data
@@ -29,12 +29,12 @@ type PaginatedResponse struct {
 
 // PaginationInfo contains pagination metadata
 type PaginationInfo struct {
-	Page       int  `json:"page"`
-	Limit      int  `json:"limit"`
-	Total      int  `json:"total"`
-	TotalPages int  `json:"total_pages"`
-	HasNext    bool `json:"has_next"`
-	HasPrev    bool `json:"has_prev"`
+	Page       int  `json:"page" example:"1"`
+	Limit      int  `json:"limit" example:"10"`
+	Total      int  `json:"total" example:"123"`
+	TotalPages int  `json:"total_pages" example:"13"`
+	HasNext    bool `json:"has_next" example:"true"`
+	HasPrev    bool `json:"has_prev" example:"false"`
 }
 
 // Success returns a successful response
