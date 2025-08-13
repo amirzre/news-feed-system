@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/amirzre/news-feed-system/internal/bootstrap"
 	"github.com/amirzre/news-feed-system/internal/config"
 	"github.com/amirzre/news-feed-system/internal/handler"
 	"github.com/amirzre/news-feed-system/internal/repository"
@@ -66,6 +67,9 @@ func main() {
 	repo := repository.New(db.PG, db.Redis, log, cfg.Cache.TTL)
 	svc := service.New(repo, log, cfg)
 	h := handler.New(svc, log)
+
+	// register jobs
+	bootstrap.SetupAggregationJobs(svc.Scheduler, svc.Aggregator, log)
 
 	// Setup routes
 	handler.SetupRoutes(e, h)
