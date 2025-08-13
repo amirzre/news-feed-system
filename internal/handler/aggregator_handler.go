@@ -28,7 +28,14 @@ func NewAggregatorHandler(aggregatorService service.AggregatorService, logger *l
 }
 
 // TriggerAggregation handles POST /api/v1/aggregation/trigger
-// This triggers a complete aggregation (all categories and sources)
+// @Summary      Trigger full aggregation
+// @Description  Trigger a complete aggregation across all categories and sources
+// @Tags         aggregation
+// @Accept       json
+// @Produce      json
+// @Success      201  {object}  response.APIResponse{data=model.AggregationResponse}  "Aggregation result"
+// @Failure      500  {object}  response.APIResponse{error=response.ErrorInfo}        "Aggregation failed"
+// @Router       /aggregation/trigger [post]
 func (h *aggregatorHandler) TriggerAggregation(c echo.Context) error {
 	start := time.Now()
 
@@ -48,6 +55,14 @@ func (h *aggregatorHandler) TriggerAggregation(c echo.Context) error {
 }
 
 // TriggerTopHeadlines handles POST /api/v1/aggregation/trigger/headlines
+// @Summary      Trigger top headlines aggregation
+// @Description  Trigger aggregation for top headlines (global/top-level headlines)
+// @Tags         aggregation
+// @Accept       json
+// @Produce      json
+// @Success      201  {object}  response.APIResponse{data=model.AggregationResponse}  "Top headlines aggregation result"
+// @Failure      500  {object}  response.APIResponse{error=response.ErrorInfo}        "Aggregation failed"
+// @Router       /aggregation/trigger/headlines [post]
 func (h *aggregatorHandler) TriggerTopHeadlines(c echo.Context) error {
 	start := time.Now()
 
@@ -69,6 +84,16 @@ func (h *aggregatorHandler) TriggerTopHeadlines(c echo.Context) error {
 }
 
 // TriggerCategoryAggregation handles POST /api/v1/aggregation/trigger/categories
+// @Summary      Trigger category aggregation
+// @Description  Trigger aggregation for one or more categories. If no categories provided, defaults are used.
+// @Tags         aggregation
+// @Accept       json
+// @Produce      json
+// @Param        body  body      model.CategoryAggregationRequest     false  "Categories payload (optional)"
+// @Success      201   {object}  response.APIResponse{data=model.CategoryAggregationResponse}    "Category aggregation result"
+// @Failure      400   {object}  response.APIResponse{error=response.ErrorInfo}                   "No valid categories provided"
+// @Failure      500   {object}  response.APIResponse{error=response.ErrorInfo}                   "Aggregation failed"
+// @Router       /aggregation/trigger/categories [post]
 func (h *aggregatorHandler) TriggerCategoryAggregation(c echo.Context) error {
 	start := time.Now()
 
@@ -114,13 +139,32 @@ func (h *aggregatorHandler) TriggerCategoryAggregation(c echo.Context) error {
 
 	responseData := model.CategoryAggregationResponse{
 		Categories: filteredCategories,
-		Result:     result,
+		Result: model.AggregationResponse{
+			TotalFetched:    result.TotalFetched,
+			TotalCreated:    result.TotalCreated,
+			TotalDuplicates: result.TotalDuplicates,
+			TotalErrors:     result.TotalErrors,
+			Duration:        result.Duration,
+			Categories:      result.Categories,
+			Sources:         result.Sources,
+			Errors:          result.Errors,
+		},
 	}
 
 	return response.Success(c, http.StatusCreated, responseData, "Category aggregation completed successfully")
 }
 
 // TriggerSourceAggregation handles POST /api/v1/aggregation/trigger/sources
+// @Summary      Trigger source aggregation
+// @Description  Trigger aggregation for one or more sources. If no sources provided, defaults are used.
+// @Tags         aggregation
+// @Accept       json
+// @Produce      json
+// @Param        body  body      model.SourceAggregationRequest       false  "Sources payload (optional)"
+// @Success      201   {object}  response.APIResponse{data=model.SourceAggregationResponse}      "Source aggregation result"
+// @Failure      400   {object}  response.APIResponse{error=response.ErrorInfo}                   "No valid sources provided"
+// @Failure      500   {object}  response.APIResponse{error=response.ErrorInfo}                   "Aggregation failed"
+// @Router       /aggregation/trigger/sources [post]
 func (h *aggregatorHandler) TriggerSourceAggregation(c echo.Context) error {
 	start := time.Now()
 
@@ -163,7 +207,16 @@ func (h *aggregatorHandler) TriggerSourceAggregation(c echo.Context) error {
 
 	responseData := model.SourceAggregationResponse{
 		Sources: filteredSources,
-		Result:  result,
+		Result: model.AggregationResponse{
+			TotalFetched:    result.TotalFetched,
+			TotalCreated:    result.TotalCreated,
+			TotalDuplicates: result.TotalDuplicates,
+			TotalErrors:     result.TotalErrors,
+			Duration:        result.Duration,
+			Categories:      result.Categories,
+			Sources:         result.Sources,
+			Errors:          result.Errors,
+		},
 	}
 
 	return response.Success(c, http.StatusCreated, responseData, "Source aggregation completed successfully")

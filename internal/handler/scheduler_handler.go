@@ -26,6 +26,14 @@ func NewSchedulerHandler(schedulerService service.SchedulerService, logger *logg
 }
 
 // GetStatus handles GET /api/v1/scheduler/status
+// @Summary      Get scheduler status
+// @Description  Retrieve current scheduler status including running flag and job list
+// @Tags         scheduler
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  response.APIResponse{data=model.SchedulerStatusResponse}  "Scheduler status"
+// @Failure      500  {object}  response.APIResponse{error=response.ErrorInfo}		       "Internal server error"
+// @Router       /scheduler/status [get]
 func (h *schedulerHandler) GetStatus(c echo.Context) error {
 	isRunning := h.schedulerService.IsRunning()
 	jobStatus := h.schedulerService.GetJobStatus()
@@ -41,6 +49,14 @@ func (h *schedulerHandler) GetStatus(c echo.Context) error {
 }
 
 // GetJobs handles GET /api/v1/scheduler/jobs
+// @Summary      List scheduler jobs
+// @Description  Retrieve list of scheduled jobs and their statuses
+// @Tags         scheduler
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  response.APIResponse{data=model.JobsResponse}	"Jobs list"
+// @Failure      500  {object}  response.APIResponse{error=response.ErrorInfo}	"Internal server error"
+// @Router       /scheduler/jobs [get]
 func (h *schedulerHandler) GetJobs(c echo.Context) error {
 	jobStatus := h.schedulerService.GetJobStatus()
 
@@ -54,6 +70,18 @@ func (h *schedulerHandler) GetJobs(c echo.Context) error {
 }
 
 // TriggerJob handles POST /api/v1/scheduler/jobs/:name/trigger
+// @Summary      Trigger a scheduler job
+// @Description  Trigger a specific job by name (acknowledges trigger; job runs according to schedule)
+// @Tags         scheduler
+// @Accept       json
+// @Produce      json
+// @Param        name  path      string                   true  "Job name"
+// @Success      200   {object}  response.APIResponse{data=model.JobTriggerResponse}  "Trigger acknowledged"
+// @Failure      400   {object}  response.APIResponse{error=response.ErrorInfo}		  "Job name required"
+// @Failure      404   {object}  response.APIResponse{error=response.ErrorInfo}		  "Job not found"
+// @Failure      409   {object}  response.APIResponse{error=response.ErrorInfo}		  "Job already running"
+// @Failure      500   {object}  response.APIResponse{error=response.ErrorInfo}		  "Internal server error"
+// @Router       /scheduler/jobs/{name}/trigger [post]
 func (h *schedulerHandler) TriggerJob(c echo.Context) error {
 	start := time.Now()
 
