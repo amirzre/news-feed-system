@@ -25,4 +25,10 @@ func SetupRoutes(e *echo.Echo, h *Handler) {
 	aggregation.POST("/trigger/headlines", h.Aggregator.TriggerTopHeadlines)
 	aggregation.POST("/trigger/categories", h.Aggregator.TriggerCategoryAggregation)
 	aggregation.POST("/trigger/sources", h.Aggregator.TriggerSourceAggregation)
+
+	// Scheduler routes
+	scheduler := api.Group("/scheduler")
+	scheduler.GET("/status", h.Scheduler.GetStatus)
+	scheduler.GET("/jobs", h.Scheduler.GetJobs)
+	scheduler.POST("/jobs/:name/trigger", h.Scheduler.TriggerJob)
 }
