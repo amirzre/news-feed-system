@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/amirzre/news-feed-system/docs"
 	"github.com/amirzre/news-feed-system/internal/bootstrap"
 	"github.com/amirzre/news-feed-system/internal/config"
 	"github.com/amirzre/news-feed-system/internal/handler"
@@ -62,6 +63,14 @@ func main() {
 	e.HideBanner = true
 	e.HidePort = true
 	e.Validator = validator.NewValidator()
+
+	// Swagger metadata
+	docs.SwaggerInfo.Title = appName
+	docs.SwaggerInfo.Description = "API documentation for the News Feed System."
+	docs.SwaggerInfo.Version = appVersion
+	docs.SwaggerInfo.BasePath = "/api/v1"
+	docs.SwaggerInfo.Host = fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
+	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
 	// Initialize repository and service layer
 	repo := repository.New(db.PG, db.Redis, log, cfg.Cache.TTL)
