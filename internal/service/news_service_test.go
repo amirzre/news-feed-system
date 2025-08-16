@@ -1,4 +1,4 @@
-package service_test
+package service
 
 import (
 	"context"
@@ -11,7 +11,6 @@ import (
 
 	"github.com/amirzre/news-feed-system/internal/config"
 	"github.com/amirzre/news-feed-system/internal/model"
-	"github.com/amirzre/news-feed-system/internal/service"
 	"github.com/amirzre/news-feed-system/pkg/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,7 +20,7 @@ import (
 // NewsServiceTestSuite defines the test suite for NewsService
 type NewsServiceTestSuite struct {
 	suite.Suite
-	service    service.NewsService
+	service    NewsService
 	logger     *logger.Logger
 	httpServer *httptest.Server
 	ctx        context.Context
@@ -42,7 +41,7 @@ func (suite *NewsServiceTestSuite) SetupTest() {
 
 	suite.logger = logger.New(cfg)
 
-	suite.service = service.NewNewsService(cfg, suite.logger)
+	suite.service = NewNewsService(cfg, suite.logger)
 }
 
 func (suite *NewsServiceTestSuite) TearDownTest() {
@@ -241,7 +240,7 @@ func (suite *NewsServiceTestSuite) TestGetTopHeadlinesInvalidAPIKey() {
 			BaseURL: suite.httpServer.URL,
 		},
 	}
-	invalidService := service.NewNewsService(cfg, suite.logger)
+	invalidService := NewNewsService(cfg, suite.logger)
 
 	req := &model.NewsParams{
 		Query: "test",
@@ -413,7 +412,7 @@ func (suite *NewsServiceTestSuite) TestHTTPErrors_RateLimit() {
 			BaseURL: suite.httpServer.URL + "/error/rate-limit",
 		},
 	}
-	errorService := service.NewNewsService(cfg, suite.logger)
+	errorService := NewNewsService(cfg, suite.logger)
 
 	req := &model.NewsParams{Query: "test"}
 
@@ -431,7 +430,7 @@ func (suite *NewsServiceTestSuite) TestHTTPErrors_ServerError() {
 			BaseURL: suite.httpServer.URL + "/error/server",
 		},
 	}
-	errorService := service.NewNewsService(cfg, suite.logger)
+	errorService := NewNewsService(cfg, suite.logger)
 
 	req := &model.NewsParams{Query: "test"}
 
@@ -449,7 +448,7 @@ func (suite *NewsServiceTestSuite) TestHTTPErrors_BadRequest() {
 			BaseURL: suite.httpServer.URL + "/error/bad-request",
 		},
 	}
-	errorService := service.NewNewsService(cfg, suite.logger)
+	errorService := NewNewsService(cfg, suite.logger)
 
 	req := &model.NewsParams{Query: "test"}
 
@@ -467,7 +466,7 @@ func (suite *NewsServiceTestSuite) TestHTTPErrors_InvalidJSON() {
 			BaseURL: suite.httpServer.URL + "/error/invalid-json",
 		},
 	}
-	errorService := service.NewNewsService(cfg, suite.logger)
+	errorService := NewNewsService(cfg, suite.logger)
 
 	req := &model.NewsParams{Query: "test"}
 
@@ -485,7 +484,7 @@ func (suite *NewsServiceTestSuite) TestHTTPErrors_APIErrorStatus() {
 			BaseURL: suite.httpServer.URL + "/error/api-error-status",
 		},
 	}
-	errorService := service.NewNewsService(cfg, suite.logger)
+	errorService := NewNewsService(cfg, suite.logger)
 
 	req := &model.NewsParams{Query: "test"}
 
@@ -497,7 +496,7 @@ func (suite *NewsServiceTestSuite) TestHTTPErrors_APIErrorStatus() {
 }
 
 func (suite *NewsServiceTestSuite) TestGetDefaultSources() {
-	sources := service.GetDefaultSources()
+	sources := GetDefaultSources()
 
 	assert.NotEmpty(suite.T(), sources)
 	assert.Contains(suite.T(), sources, "bbc-news")
@@ -508,7 +507,7 @@ func (suite *NewsServiceTestSuite) TestGetDefaultSources() {
 }
 
 func (suite *NewsServiceTestSuite) TestGetDefaultCategories() {
-	categories := service.GetDefaultCategories()
+	categories := GetDefaultCategories()
 
 	assert.NotEmpty(suite.T(), categories)
 	assert.Contains(suite.T(), categories, "general")

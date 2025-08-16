@@ -1,4 +1,4 @@
-package service_test
+package service
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 
 	"github.com/amirzre/news-feed-system/internal/config"
 	"github.com/amirzre/news-feed-system/internal/model"
-	"github.com/amirzre/news-feed-system/internal/service"
 	"github.com/amirzre/news-feed-system/pkg/logger"
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/assert"
@@ -105,7 +104,7 @@ type PostServiceTestSuite struct {
 	suite.Suite
 	mockRepo *MockPostRepository
 	logger   *logger.Logger
-	service  service.PostService
+	service  PostService
 	ctx      context.Context
 }
 
@@ -114,7 +113,7 @@ func (suite *PostServiceTestSuite) SetupTest() {
 
 	suite.mockRepo = new(MockPostRepository)
 	suite.logger = logger.New(cfg)
-	suite.service = service.NewPostService(suite.mockRepo, suite.logger)
+	suite.service = NewPostService(suite.mockRepo, suite.logger)
 	suite.ctx = context.Background()
 }
 
@@ -203,7 +202,7 @@ func (suite *PostServiceTestSuite) TestCreatePostPostExists() {
 	result, err := suite.service.CreatePost(suite.ctx, req)
 
 	assert.Error(suite.T(), err)
-	assert.Equal(suite.T(), service.ErrPostExists, err)
+	assert.Equal(suite.T(), ErrPostExists, err)
 	assert.Nil(suite.T(), result)
 }
 
@@ -254,7 +253,7 @@ func (suite *PostServiceTestSuite) TestGetPostByIDInvalidID() {
 	result, err := suite.service.GetPostByID(suite.ctx, id)
 
 	assert.Error(suite.T(), err)
-	assert.Equal(suite.T(), service.ErrPostIDInvalid, err)
+	assert.Equal(suite.T(), ErrPostIDInvalid, err)
 	assert.Nil(suite.T(), result)
 }
 
@@ -266,7 +265,7 @@ func (suite *PostServiceTestSuite) TestGetPostByIDPostNotFound() {
 	result, err := suite.service.GetPostByID(suite.ctx, id)
 
 	assert.Error(suite.T(), err)
-	assert.Equal(suite.T(), service.ErrPostNotFound, err)
+	assert.Equal(suite.T(), ErrPostNotFound, err)
 	assert.Nil(suite.T(), result)
 }
 
@@ -424,7 +423,7 @@ func (suite *PostServiceTestSuite) TestUpdatePostInvalidID() {
 	result, err := suite.service.UpdatePost(suite.ctx, id, req)
 
 	assert.Error(suite.T(), err)
-	assert.Equal(suite.T(), service.ErrPostIDInvalid, err)
+	assert.Equal(suite.T(), ErrPostIDInvalid, err)
 	assert.Nil(suite.T(), result)
 }
 
@@ -437,7 +436,7 @@ func (suite *PostServiceTestSuite) TestUpdatePostPostNotFound() {
 	result, err := suite.service.UpdatePost(suite.ctx, id, req)
 
 	assert.Error(suite.T(), err)
-	assert.Equal(suite.T(), service.ErrPostNotFound, err)
+	assert.Equal(suite.T(), ErrPostNotFound, err)
 	assert.Nil(suite.T(), result)
 }
 
@@ -489,7 +488,7 @@ func (suite *PostServiceTestSuite) TestDeletePostInvalidID() {
 	err := suite.service.DeletePost(suite.ctx, id)
 
 	assert.Error(suite.T(), err)
-	assert.Equal(suite.T(), service.ErrPostIDInvalid, err)
+	assert.Equal(suite.T(), ErrPostIDInvalid, err)
 }
 
 func (suite *PostServiceTestSuite) TestDeletePostPostNotFound() {
@@ -500,7 +499,7 @@ func (suite *PostServiceTestSuite) TestDeletePostPostNotFound() {
 	err := suite.service.DeletePost(suite.ctx, id)
 
 	assert.Error(suite.T(), err)
-	assert.Equal(suite.T(), service.ErrPostNotFound, err)
+	assert.Equal(suite.T(), ErrPostNotFound, err)
 }
 
 func (suite *PostServiceTestSuite) TestDeletePostGetPostError() {
@@ -691,11 +690,6 @@ func (suite *PostServiceTestSuite) TestCreatePostFromNewsAPIInvalidPublishedAt()
 
 	assert.NoError(suite.T(), err)
 	assert.Equal(suite.T(), expectedPost, result)
-}
-
-// Helper function for creating string pointers
-func stringPtr(s string) *string {
-	return &s
 }
 
 // Run the test suite
