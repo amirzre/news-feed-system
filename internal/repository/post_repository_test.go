@@ -1,4 +1,4 @@
-package repository_test
+package repository
 
 import (
 	"context"
@@ -9,7 +9,6 @@ import (
 
 	"github.com/amirzre/news-feed-system/internal/config"
 	"github.com/amirzre/news-feed-system/internal/model"
-	"github.com/amirzre/news-feed-system/internal/repository"
 	"github.com/amirzre/news-feed-system/pkg/logger"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
@@ -25,7 +24,7 @@ import (
 type testSuite struct {
 	db          *pgxpool.Pool
 	redisClient *redis.Client
-	repo        repository.PostRepository
+	repo        PostRepository
 	logger      *logger.Logger
 
 	// Containers for cleanup
@@ -88,7 +87,7 @@ func setupTestSuite(t *testing.T) *testSuite {
 	cfg := &config.Config{App: config.AppConfig{LogLevel: "debug"}}
 	testLogger := logger.New(cfg)
 
-	repo := repository.NewPostRepository(db, redisClient, testLogger, time.Minute)
+	repo := NewPostRepository(db, redisClient, testLogger, time.Minute)
 
 	return &testSuite{
 		db:             db,
