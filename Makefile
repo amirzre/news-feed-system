@@ -151,3 +151,8 @@ migration-drop: ## Drop everything in database (DANGER!)
 	else \
 		echo "Cancelled."; \
 	fi
+
+# Tests
+test-unit: ## Run unit tests only
+	@echo "Running unit tests..."
+	go test -v -short ./internal/handler ./internal/service ./internal/repository
