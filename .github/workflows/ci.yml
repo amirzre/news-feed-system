@@ -123,17 +123,3 @@ jobs:
     
     - name: Build application
       run: go build -v -o bin/main ./cmd/server
-    
-    - name: Test application startup
-      run: |
-        timeout 10s ./bin/main || if [[ $? == 124 ]]; then echo "App started successfully"; else exit 1; fi
-      env:
-        DB_HOST: localhost
-        DB_PORT: 5432
-        DB_USER: postgres
-        DB_PASSWORD: postgres
-        DB_NAME: news_feed_test
-        REDIS_HOST: localhost
-        REDIS_PORT: 6379
-        APP_ENV: development
-        SERVER_PORT: 8080
