@@ -1,0 +1,145 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/amirzre/news-feed-system/docs"
+	"github.com/amirzre/news-feed-system/internal/bootstrap"
+	"github.com/amirzre/news-feed-system/internal/config"
+	"github.com/amirzre/news-feed-system/internal/handler"
+	"github.com/amirzre/news-feed-system/internal/repository"
+	"github.com/amirzre/news-feed-system/internal/service"
+	"github.com/amirzre/news-feed-system/pkg/database"
+	"github.com/amirzre/news-feed-system/pkg/logger"
+	"github.com/amirzre/news-feed-system/pkg/validator"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+)
+
+const (
+	appName    = "news-feed-system"
+	appVersion = "1.0.0"
+)
+
+func main() {
+	// Load configuration
+	cfg, err := config.Load()
+	if err != nil {
+		fmt.Printf("Failed to load configuration: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Initialize logger
+	log := logger.New(cfg)
+
+	// Initialize database connection
+	db, err := database.NewDatabase(cfg)
+	if err != nil {
+		log.Error("Failed to initialize database connections", "error", err.Error())
+		os.Exit(1)
+	}
+	defer db.Close()
+
+	// Test database connections
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := db.Health(ctx); err != nil {
+		log.Error("Database health check failed", "error", err.Error())
+		os.Exit(1)
+	}
+
+	log.Info("Database connections established successfully")
+
+	// Initialize Echo server
+	e := echo.New()
+
+	// Configure Echo
+	e.HideBanner = true
+	e.HidePort = true
+	e.Validator = validator.NewValidator()
+
+	// Add middleware
+	e.Use(middleware.Recover())
+
+	// Configure CORS with config values
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins:     cfg.CORS.AllowOrigins,
+		AllowMethods:     cfg.CORS.AllowMethods,
+		AllowHeaders:     cfg.CORS.AllowHeaders,
+		ExposeHeaders:    cfg.CORS.ExposeHeaders,
+		AllowCredentials: cfg.CORS.AllowCredentials,
+		MaxAge:           cfg.CORS.MaxAge,
+	}))
+
+	// Custom logging middleware
+	e.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		LogURI:     true,
+		LogStatus:  true,
+		LogMethod:  true,
+		LogLatency: true,
+		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+			log.LogHTTPRequest(
+				v.Method,
+				v.URI,
+				v.Status,
+				v.Latency.Milliseconds(),
+			)
+			return nil
+		},
+	}))
+
+	// Swagger metadata
+	docs.SwaggerInfo.Title = appName
+	docs.SwaggerInfo.Description = "API documentation for the News Feed System."
+	docs.SwaggerInfo.Version = appVersion
+	docs.SwaggerInfo.BasePath = "/api/v1"
+	docs.SwaggerInfo.Host = fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
+	docs.SwaggerInfo.Schemes = []string{"http", "https"}
+
+	// Initialize repository and service layer
+	repo := repository.New(db.PG, db.Redis, log, cfg.Cache.TTL)
+	svc := service.New(repo, log, cfg)
+	h := handler.New(svc, log)
+
+	// register jobs
+	bootstrap.SetupAggregationJobs(svc.Scheduler, svc.Aggregator, log)
+
+	// Setup routes
+	handler.SetupRoutes(e, h)
+
+	// Start server in a goroutine
+	go func() {
+		addr := cfg.ServerAddr()
+		log.LogStartup(appName, appVersion, cfg.Server.Port)
+
+		if err := e.Start(addr); err != nil && err != http.ErrServerClosed {
+			log.Error("Server failed to start", "error", err.Error())
+			os.Exit(1)
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+	<-quit
+
+	log.LogShutdown(appName, "received shutdown signal")
+
+	// Graceful shutdown with timeout
+	ctx, cancel = context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := e.Shutdown(ctx); err != nil {
+		log.Error("Server forced to shutdown", "error", err.Error())
+		os.Exit(1)
+	}
+
+	log.Info("Server shutdown completed")
+}

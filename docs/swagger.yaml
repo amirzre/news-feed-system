@@ -1,0 +1,1073 @@
+definitions:
+  model.AggregationResponse:
+    properties:
+      categories:
+        additionalProperties:
+          $ref: '#/definitions/model.CategoryStats'
+        type: object
+      duration:
+        example: 1s
+        type: string
+      errors:
+        example:
+        - '[]'
+        items:
+          type: string
+        type: array
+      sources:
+        additionalProperties:
+          $ref: '#/definitions/model.SourceStats'
+        type: object
+      total_created:
+        example: 120
+        type: integer
+      total_duplicates:
+        example: 25
+        type: integer
+      total_errors:
+        example: 5
+        type: integer
+      total_fetched:
+        example: 150
+        type: integer
+    type: object
+  model.CategoryAggregationRequest:
+    properties:
+      categories:
+        example:
+        - '["technology"'
+        - '"business"]'
+        items:
+          type: string
+        type: array
+    type: object
+  model.CategoryAggregationResponse:
+    properties:
+      categories:
+        example:
+        - '["technology"]'
+        items:
+          type: string
+        type: array
+      result:
+        $ref: '#/definitions/model.AggregationResponse'
+    type: object
+  model.CategoryStats:
+    properties:
+      created:
+        example: 80
+        type: integer
+      duplicates:
+        example: 15
+        type: integer
+      errors:
+        example: 2
+        type: integer
+      fetched:
+        example: 100
+        type: integer
+    type: object
+  model.CreatePostParams:
+    properties:
+      category:
+        example: technology
+        maxLength: 50
+        type: string
+      content:
+        example: Full content...
+        type: string
+      description:
+        example: A brief description
+        type: string
+      image_url:
+        example: https://example.com/image.jpg
+        maxLength: 1000
+        type: string
+      published_at:
+        example: "2024-01-20T10:00:00Z"
+        type: string
+      source:
+        example: TechCrunch
+        maxLength: 100
+        minLength: 1
+        type: string
+      title:
+        example: 'Breaking: new Go release'
+        maxLength: 500
+        minLength: 1
+        type: string
+      url:
+        example: https://example.com/article
+        maxLength: 500
+        minLength: 10
+        type: string
+    required:
+    - source
+    - title
+    - url
+    type: object
+  model.JobStatus:
+    properties:
+      average_run_time:
+        example: 30s
+        type: string
+      error_count:
+        example: 1
+        type: integer
+      interval:
+        example: 1h
+        type: string
+      is_running:
+        example: false
+        type: boolean
+      last_error:
+        example: timeout error
+        type: string
+      last_run:
+        example: "2025-08-11T07:11:03Z"
+        type: string
+      name:
+        example: aggregate_all
+        type: string
+      next_run:
+        example: "2025-08-11T08:11:03Z"
+        type: string
+      run_count:
+        example: 42
+        type: integer
+    type: object
+  model.JobTriggerResponse:
+    properties:
+      job_name:
+        example: aggregate_all
+        type: string
+      next_run:
+        example: "2025-08-11T08:11:03Z"
+        type: string
+      note:
+        example: Job will run according to its schedule.
+        type: string
+      timestamp:
+        example: "2025-08-11T07:11:03Z"
+        type: string
+    type: object
+  model.JobsResponse:
+    properties:
+      count:
+        example: 3
+        type: integer
+      jobs:
+        additionalProperties:
+          $ref: '#/definitions/model.JobStatus'
+        type: object
+      timestamp:
+        example: "2025-08-11T07:11:03Z"
+        type: string
+    type: object
+  model.Post:
+    properties:
+      category:
+        example: technology
+        type: string
+      content:
+        example: Full content of the article...
+        type: string
+      created_at:
+        example: "2025-08-11T07:11:03Z"
+        type: string
+      description:
+        example: A brief description of the news article
+        type: string
+      id:
+        example: 1
+        type: integer
+      image_url:
+        example: https://example.com/image.jpg
+        type: string
+      published_at:
+        example: "2024-01-20T10:00:00Z"
+        type: string
+      source:
+        example: TechCrunch
+        type: string
+      title:
+        example: 'Breaking: new Go release'
+        type: string
+      updated_at:
+        example: "2025-08-11T07:16:04Z"
+        type: string
+      url:
+        example: https://example.com/article
+        type: string
+    type: object
+  model.SchedulerStatusResponse:
+    properties:
+      jobs:
+        additionalProperties:
+          $ref: '#/definitions/model.JobStatus'
+        type: object
+      jobs_count:
+        example: 3
+        type: integer
+      scheduler_running:
+        example: true
+        type: boolean
+      timestamp:
+        example: "2025-08-11T07:11:03Z"
+        type: string
+    type: object
+  model.SourceAggregationRequest:
+    properties:
+      sources:
+        example:
+        - '["techcrunch"'
+        - '"wired"]'
+        items:
+          type: string
+        type: array
+    type: object
+  model.SourceAggregationResponse:
+    properties:
+      result:
+        $ref: '#/definitions/model.AggregationResponse'
+      sources:
+        example:
+        - '["techcrunch"]'
+        items:
+          type: string
+        type: array
+    type: object
+  model.SourceStats:
+    properties:
+      created:
+        example: 80
+        type: integer
+      duplicates:
+        example: 15
+        type: integer
+      errors:
+        example: 2
+        type: integer
+      fetched:
+        example: 100
+        type: integer
+    type: object
+  model.UpdatePostParams:
+    properties:
+      category:
+        example: business
+        maxLength: 50
+        type: string
+      content:
+        example: Updated content
+        type: string
+      description:
+        example: Updated description
+        type: string
+      image_url:
+        example: https://example.com/updated.jpg
+        maxLength: 1000
+        type: string
+      title:
+        example: Updated title
+        maxLength: 500
+        minLength: 1
+        type: string
+    type: object
+  response.APIResponse:
+    properties:
+      data: {}
+      error:
+        $ref: '#/definitions/response.ErrorInfo'
+      message:
+        example: Operation successful
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  response.ErrorInfo:
+    properties:
+      details:
+        example: title is required
+        type: string
+      message:
+        example: Validation failed
+        type: string
+    type: object
+  response.PaginatedResponse:
+    properties:
+      filters:
+        additionalProperties:
+          type: string
+        type: object
+      items: {}
+      pagination:
+        $ref: '#/definitions/response.PaginationInfo'
+    type: object
+  response.PaginationInfo:
+    properties:
+      has_next:
+        example: true
+        type: boolean
+      has_prev:
+        example: false
+        type: boolean
+      limit:
+        example: 10
+        type: integer
+      page:
+        example: 1
+        type: integer
+      total:
+        example: 123
+        type: integer
+      total_pages:
+        example: 13
+        type: integer
+    type: object
+info:
+  contact: {}
+paths:
+  /aggregation/trigger:
+    post:
+      consumes:
+      - application/json
+      description: Trigger a complete aggregation across all categories and sources
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Aggregation result
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.AggregationResponse'
+              type: object
+        "500":
+          description: Aggregation failed
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+      summary: Trigger full aggregation
+      tags:
+      - aggregation
+  /aggregation/trigger/categories:
+    post:
+      consumes:
+      - application/json
+      description: Trigger aggregation for one or more categories. If no categories
+        provided, defaults are used.
+      parameters:
+      - description: Categories payload (optional)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/model.CategoryAggregationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Category aggregation result
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.CategoryAggregationResponse'
+              type: object
+        "400":
+          description: No valid categories provided
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+        "500":
+          description: Aggregation failed
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+      summary: Trigger category aggregation
+      tags:
+      - aggregation
+  /aggregation/trigger/headlines:
+    post:
+      consumes:
+      - application/json
+      description: Trigger aggregation for top headlines (global/top-level headlines)
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Top headlines aggregation result
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.AggregationResponse'
+              type: object
+        "500":
+          description: Aggregation failed
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+      summary: Trigger top headlines aggregation
+      tags:
+      - aggregation
+  /aggregation/trigger/sources:
+    post:
+      consumes:
+      - application/json
+      description: Trigger aggregation for one or more sources. If no sources provided,
+        defaults are used.
+      parameters:
+      - description: Sources payload (optional)
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/model.SourceAggregationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Source aggregation result
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.SourceAggregationResponse'
+              type: object
+        "400":
+          description: No valid sources provided
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+        "500":
+          description: Aggregation failed
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+      summary: Trigger source aggregation
+      tags:
+      - aggregation
+  /posts:
+    get:
+      consumes:
+      - application/json
+      description: List posts with pagination, optional filtering by category/source
+        and search
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by category
+        in: query
+        name: category
+        type: string
+      - description: Filter by source
+        in: query
+        name: source
+        type: string
+      - description: Search term
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of posts
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PaginatedResponse'
+                  - properties:
+                      items:
+                        items:
+                          $ref: '#/definitions/model.Post'
+                        type: array
+                      pagination:
+                        $ref: '#/definitions/response.PaginationInfo'
+                    type: object
+              type: object
+        "400":
+          description: Validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+      summary: List posts
+      tags:
+      - posts
+    post:
+      consumes:
+      - application/json
+      description: Create a new post with the provided payload
+      parameters:
+      - description: Create Post payload
+        in: body
+        name: post
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreatePostParams'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Post created
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Post'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+        "409":
+          description: Conflict - post exists
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+      summary: Create a new post
+      tags:
+      - posts
+  /posts/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a post by ID
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Invalid ID
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+        "404":
+          description: Post not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+      summary: Delete a post
+      tags:
+      - posts
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a single post by its ID
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Post retrieved
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Post'
+              type: object
+        "400":
+          description: Invalid ID
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+        "404":
+          description: Post not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+      summary: Get a post by ID
+      tags:
+      - posts
+    put:
+      consumes:
+      - application/json
+      description: Update a post by ID with the provided payload
+      parameters:
+      - description: Post ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Post payload
+        in: body
+        name: post
+        required: true
+        schema:
+          $ref: '#/definitions/model.UpdatePostParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated post
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Post'
+              type: object
+        "400":
+          description: Invalid request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+        "404":
+          description: Post not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+      summary: Update a post
+      tags:
+      - posts
+  /posts/category/{category}:
+    get:
+      consumes:
+      - application/json
+      description: List posts filtered by category
+      parameters:
+      - description: Category
+        in: path
+        name: category
+        required: true
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Results per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of posts
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PaginatedResponse'
+                  - properties:
+                      items:
+                        items:
+                          $ref: '#/definitions/model.Post'
+                        type: array
+                      pagination:
+                        $ref: '#/definitions/response.PaginationInfo'
+                    type: object
+              type: object
+        "400":
+          description: Validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+      summary: List posts by category
+      tags:
+      - posts
+  /posts/search:
+    get:
+      consumes:
+      - application/json
+      description: Search posts by query string with optional filters
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Results per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by category
+        in: query
+        name: category
+        type: string
+      - description: Filter by source
+        in: query
+        name: source
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Search results
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PaginatedResponse'
+                  - properties:
+                      items:
+                        items:
+                          $ref: '#/definitions/model.Post'
+                        type: array
+                      pagination:
+                        $ref: '#/definitions/response.PaginationInfo'
+                    type: object
+              type: object
+        "400":
+          description: Validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+      summary: Search posts
+      tags:
+      - posts
+  /posts/source/{source}:
+    get:
+      consumes:
+      - application/json
+      description: List posts filtered by source
+      parameters:
+      - description: Source
+        in: path
+        name: source
+        required: true
+        type: string
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Results per page
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of posts
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PaginatedResponse'
+                  - properties:
+                      items:
+                        items:
+                          $ref: '#/definitions/model.Post'
+                        type: array
+                      pagination:
+                        $ref: '#/definitions/response.PaginationInfo'
+                    type: object
+              type: object
+        "400":
+          description: Validation error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+      summary: List posts by source
+      tags:
+      - posts
+  /scheduler/jobs:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve list of scheduled jobs and their statuses
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Jobs list
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.JobsResponse'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+      summary: List scheduler jobs
+      tags:
+      - scheduler
+  /scheduler/jobs/{name}/trigger:
+    post:
+      consumes:
+      - application/json
+      description: Trigger a specific job by name (acknowledges trigger; job runs
+        according to schedule)
+      parameters:
+      - description: Job name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Trigger acknowledged
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.JobTriggerResponse'
+              type: object
+        "400":
+          description: Job name required
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+        "404":
+          description: Job not found
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+        "409":
+          description: Job already running
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+      summary: Trigger a scheduler job
+      tags:
+      - scheduler
+  /scheduler/status:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve current scheduler status including running flag and job
+        list
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Scheduler status
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.SchedulerStatusResponse'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorInfo'
+              type: object
+      summary: Get scheduler status
+      tags:
+      - scheduler
+swagger: "2.0"
