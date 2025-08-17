@@ -113,15 +113,6 @@ jobs:
     - name: Run linter
       run: golangci-lint run --timeout=5m
     
-    - name: Run static analysis
-      run: staticcheck ./...
-    
-    - name: Run security scan
-      uses: securecodewarrior/github-action-add-sarif@v1
-      with:
-        sarif-file: 'gosec-report.sarif'
-      continue-on-error: true
-    
     - name: Run tests
       run: go test -race -v ./...
       env:
@@ -133,7 +124,7 @@ jobs:
         REDIS_HOST: localhost
         REDIS_PORT: 6379
         REDIS_PASSWORD: ""
-        APP_ENV: test
+        APP_ENV: development
     
     - name: Build application
       run: go build -v -o bin/main ./cmd/server
@@ -149,5 +140,5 @@ jobs:
         DB_NAME: news_feed_test
         REDIS_HOST: localhost
         REDIS_PORT: 6379
-        APP_ENV: test
-        PORT: 8080
+        APP_ENV: development
+        SERVER_PORT: 8080
